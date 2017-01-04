@@ -16,6 +16,7 @@
 package com.mohiva.play.silhouette.impl.authenticators
 
 import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.api.actions.SecuredActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.services.AuthenticatorResult
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
@@ -37,6 +38,7 @@ class DummyAuthenticatorSpec extends PlaySpecification with Mockito {
   "The `create` method of the service" should {
     "return an authenticator containing the given login info" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service.create(loginInfo)).loginInfo must be equalTo loginInfo
     }
@@ -45,6 +47,7 @@ class DummyAuthenticatorSpec extends PlaySpecification with Mockito {
   "The `retrieve` method of the service" should {
     "return None" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service.retrieve) must beNone
     }
@@ -53,6 +56,7 @@ class DummyAuthenticatorSpec extends PlaySpecification with Mockito {
   "The `init` method of the service" should {
     "return unit" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service.init(authenticator)) must beEqualTo(())
     }
@@ -61,6 +65,7 @@ class DummyAuthenticatorSpec extends PlaySpecification with Mockito {
   "The result `embed` method of the service" should {
     "return the original response" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val result = AuthenticatorResult(Results.Ok)
 
       await(service.embed((), result)) must be equalTo result
@@ -87,6 +92,7 @@ class DummyAuthenticatorSpec extends PlaySpecification with Mockito {
   "The `update` method of the service" should {
     "return the original result" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val result = AuthenticatorResult(Results.Ok)
 
       await(service.update(authenticator, result)) must be equalTo result
@@ -96,6 +102,7 @@ class DummyAuthenticatorSpec extends PlaySpecification with Mockito {
   "The `renew` method of the service" should {
     "return the original result" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val result = AuthenticatorResult(Results.Ok)
 
       await(service.renew(authenticator, result)) must be equalTo result
@@ -105,6 +112,7 @@ class DummyAuthenticatorSpec extends PlaySpecification with Mockito {
   "The `discard` method of the service" should {
     "return the original result" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val result = AuthenticatorResult(Results.Ok)
 
       await(service.discard(authenticator, result)) must be equalTo result

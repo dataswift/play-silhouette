@@ -19,14 +19,14 @@
  */
 package com.mohiva.play.silhouette.api.services
 
-import com.mohiva.play.silhouette.api.{ Identity, LoginInfo }
+import com.mohiva.play.silhouette.api.{ DynamicEnvironment, Identity, LoginInfo }
 
 import scala.concurrent.Future
 
 /**
  * A trait that provides the means to retrieve identities for the Silhouette module.
  */
-trait IdentityService[T <: Identity] {
+trait IdentityService[T <: Identity, D <: DynamicEnvironment] {
 
   /**
    * Retrieves an identity that matches the specified login info.
@@ -34,5 +34,5 @@ trait IdentityService[T <: Identity] {
    * @param loginInfo The login info to retrieve an identity.
    * @return The retrieved identity or None if no identity could be retrieved for the given login info.
    */
-  def retrieve(loginInfo: LoginInfo): Future[Option[T]]
+  def retrieve(loginInfo: LoginInfo)(implicit dyn: D): Future[Option[T]]
 }

@@ -17,14 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.mohiva.play.silhouette.impl.providers
 
 import javax.inject.Inject
 
-import com.mohiva.play.silhouette.api._
+import com.mohiva.play.silhouette.api.{ LoginInfo, _ }
 import com.mohiva.play.silhouette.api.exceptions.ConfigurationException
-import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
-import com.mohiva.play.silhouette.api.util._
+import com.mohiva.play.silhouette.api.repositories.{ AuthInfoRepository }
+import com.mohiva.play.silhouette.api.util.{ Credentials, PasswordHasherRegistry, _ }
 import com.mohiva.play.silhouette.impl.exceptions.{ IdentityNotFoundException, InvalidPasswordException }
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider._
 
@@ -43,10 +44,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @param passwordHasherRegistry The password hashers used by the application.
  * @param executionContext The execution context to handle the asynchronous operations.
  */
-class CredentialsProvider @Inject() (
-  protected val authInfoRepository: AuthInfoRepository,
+class CredentialsProvider[D <: DynamicEnvironment] @Inject() (
+  protected val authInfoRepository: AuthInfoRepository[D],
   protected val passwordHasherRegistry: PasswordHasherRegistry)(implicit val executionContext: ExecutionContext)
-  extends PasswordProvider {
+  extends PasswordProvider[D] {
 
   /**
    * Gets the provider ID.
@@ -61,7 +62,7 @@ class CredentialsProvider @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info if the authentication was successful, otherwise a failure.
    */
-  def authenticate(credentials: Credentials): Future[LoginInfo] = {
+  def authenticate(credentials: Credentials)(implicit dyn: D): Future[LoginInfo] = {
     loginInfo(credentials).flatMap { loginInfo =>
       authenticate(loginInfo, credentials.password).map {
         case Authenticated            => loginInfo
@@ -86,7 +87,7 @@ class CredentialsProvider @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info created from the credentials.
    */
-  def loginInfo(credentials: Credentials): Future[LoginInfo] = Future.successful(LoginInfo(id, credentials.identifier))
+  def loginInfo(credentials: Credentials)(implicit dyn: D): Future[LoginInfo] = Future.successful(LoginInfo(dyn.id, credentials.identifier))
 }
 
 /**
@@ -99,3 +100,4 @@ object CredentialsProvider {
    */
   val ID = "credentials"
 }
+

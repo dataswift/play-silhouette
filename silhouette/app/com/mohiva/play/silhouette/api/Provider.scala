@@ -37,7 +37,7 @@ trait Provider {
  *
  * It scans the request for credentials and returns the login info for it.
  */
-trait RequestProvider extends Provider {
+trait RequestProvider[D <: DynamicEnvironment] extends Provider {
 
   /**
    * Authenticates an identity based on credentials sent in a request.
@@ -54,5 +54,5 @@ trait RequestProvider extends Provider {
    * @tparam B The type of the body.
    * @return Some login info on successful authentication or None if the authentication was unsuccessful.
    */
-  def authenticate[B](request: Request[B]): Future[Option[LoginInfo]]
+  def authenticate[B](request: Request[B])(implicit dyn: D): Future[Option[LoginInfo]]
 }

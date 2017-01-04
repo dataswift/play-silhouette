@@ -17,7 +17,7 @@ package com.mohiva.play.silhouette.impl.authenticators
 
 import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService }
 import com.mohiva.play.silhouette.api.util.ExtractableRequest
-import com.mohiva.play.silhouette.api.{ Authenticator, LoginInfo }
+import com.mohiva.play.silhouette.api.{ Authenticator, DynamicEnvironment, LoginInfo }
 import play.api.mvc.{ RequestHeader, Result }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -50,7 +50,7 @@ case class DummyAuthenticator(loginInfo: LoginInfo) extends Authenticator {
  * @param executionContext The execution context to handle the asynchronous operations.
  */
 class DummyAuthenticatorService(implicit val executionContext: ExecutionContext)
-  extends AuthenticatorService[DummyAuthenticator] {
+  extends AuthenticatorService[DummyAuthenticator, DynamicEnvironment] {
 
   /**
    * Creates a new authenticator for the specified login info.
@@ -74,7 +74,7 @@ class DummyAuthenticatorService(implicit val executionContext: ExecutionContext)
    * @tparam B The type of the request body.
    * @return Always None because .
    */
-  override def retrieve[B](implicit request: ExtractableRequest[B]): Future[Option[DummyAuthenticator]] = {
+  override def retrieve[B](implicit request: ExtractableRequest[B], dyn: DynamicEnvironment): Future[Option[DummyAuthenticator]] = {
     Future.successful(None)
   }
 
@@ -85,7 +85,7 @@ class DummyAuthenticatorService(implicit val executionContext: ExecutionContext)
    * @param request The request header.
    * @return The serialized authenticator value.
    */
-  override def init(authenticator: DummyAuthenticator)(implicit request: RequestHeader): Future[Unit] = {
+  override def init(authenticator: DummyAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[Unit] = {
     Future.successful(())
   }
 
@@ -130,7 +130,7 @@ class DummyAuthenticatorService(implicit val executionContext: ExecutionContext)
    */
   override def update(authenticator: DummyAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     Future.successful(AuthenticatorResult(result))
   }
@@ -142,7 +142,7 @@ class DummyAuthenticatorService(implicit val executionContext: ExecutionContext)
    * @param request The request header.
    * @return The serialized expression of the authenticator.
    */
-  override def renew(authenticator: DummyAuthenticator)(implicit request: RequestHeader): Future[Unit] = {
+  override def renew(authenticator: DummyAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[Unit] = {
     Future.successful(())
   }
 
@@ -156,7 +156,7 @@ class DummyAuthenticatorService(implicit val executionContext: ExecutionContext)
    */
   override def renew(authenticator: DummyAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     Future.successful(AuthenticatorResult(result))
   }

@@ -24,7 +24,7 @@ import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
 import com.mohiva.play.silhouette.api.services.AuthenticatorService._
 import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService }
 import com.mohiva.play.silhouette.api.util._
-import com.mohiva.play.silhouette.api.{ ExpirableAuthenticator, Logger, LoginInfo, StorableAuthenticator }
+import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator._
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticatorService._
 import com.nimbusds.jose.JWSObject
@@ -236,7 +236,7 @@ class JWTAuthenticatorService(
   authenticatorEncoder: AuthenticatorEncoder,
   idGenerator: IDGenerator,
   clock: Clock)(implicit val executionContext: ExecutionContext)
-  extends AuthenticatorService[JWTAuthenticator]
+  extends AuthenticatorService[JWTAuthenticator, DynamicEnvironment]
   with Logger {
 
   /**
@@ -270,7 +270,7 @@ class JWTAuthenticatorService(
    * @tparam B The type of the request body.
    * @return Some authenticator or None if no authenticator could be found in request.
    */
-  override def retrieve[B](implicit request: ExtractableRequest[B]): Future[Option[JWTAuthenticator]] = {
+  override def retrieve[B](implicit request: ExtractableRequest[B], dyn: DynamicEnvironment): Future[Option[JWTAuthenticator]] = {
     Future.fromTry(Try(request.extractString(settings.fieldName, settings.requestParts))).flatMap {
       case Some(token) => unserialize(token, authenticatorEncoder, settings) match {
         case Success(authenticator) => repository.fold(Future.successful(Option(authenticator)))(_.find(authenticator.id))
@@ -292,7 +292,7 @@ class JWTAuthenticatorService(
    * @param request The request header.
    * @return The serialized authenticator value.
    */
-  override def init(authenticator: JWTAuthenticator)(implicit request: RequestHeader): Future[String] = {
+  override def init(authenticator: JWTAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[String] = {
     repository.fold(Future.successful(authenticator))(_.add(authenticator)).map { a =>
       serialize(a, authenticatorEncoder, settings)
     }.recover {
@@ -350,7 +350,7 @@ class JWTAuthenticatorService(
    */
   override def update(authenticator: JWTAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     repository.fold(Future.successful(authenticator))(_.update(authenticator)).map { a =>
       AuthenticatorResult(result.withHeaders(settings.fieldName -> serialize(a, authenticatorEncoder, settings)))
@@ -370,7 +370,7 @@ class JWTAuthenticatorService(
    * @param request The request header.
    * @return The serialized expression of the authenticator.
    */
-  override def renew(authenticator: JWTAuthenticator)(implicit request: RequestHeader): Future[String] = {
+  override def renew(authenticator: JWTAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[String] = {
     repository.fold(Future.successful(()))(_.remove(authenticator.id)).flatMap { _ =>
       create(authenticator.loginInfo).map(_.copy(customClaims = authenticator.customClaims)).flatMap(init)
     }.recover {
@@ -391,7 +391,7 @@ class JWTAuthenticatorService(
    */
   override def renew(authenticator: JWTAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     renew(authenticator).flatMap(v => embed(v, result)).recover {
       case e => throw new AuthenticatorRenewalException(RenewError.format(ID, authenticator), e)

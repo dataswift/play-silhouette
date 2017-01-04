@@ -17,10 +17,11 @@ package com.mohiva.play.silhouette.impl.authenticators
 
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._
 import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.api.actions.SecuredActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.exceptions._
 import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
 import com.mohiva.play.silhouette.api.services.AuthenticatorService._
-import com.mohiva.play.silhouette.api.util.{ RequestPart, Clock, IDGenerator }
+import com.mohiva.play.silhouette.api.util.{ Clock, IDGenerator, RequestPart }
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticatorService._
 import org.joda.time.DateTime
 import org.specs2.control.NoLanguageFeatures
@@ -116,13 +117,13 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
   "The `retrieve` method of the service" should {
     "return None if no authenticator header exists" in new Context {
       implicit val request = FakeRequest()
-
+      implicit val dyn = FakeDynamicEnvironment()
       await(service.retrieve) must beNone
     }
 
     "return None if no authenticator is stored for the token located in the headers" in new Context {
       implicit val request = FakeRequest().withHeaders(settings.fieldName -> authenticator.id)
-
+      implicit val dyn = FakeDynamicEnvironment()
       repository.find(authenticator.id) returns Future.successful(None)
 
       await(service.retrieve) must beNone
@@ -130,7 +131,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
 
     "return authenticator if an authenticator is stored for token located in the header" in new Context {
       implicit val request = FakeRequest().withHeaders(settings.fieldName -> authenticator.id)
-
+      implicit val dyn = FakeDynamicEnvironment()
       repository.find(authenticator.id) returns Future.successful(Some(authenticator))
 
       await(service.retrieve) must beSome(authenticator)
@@ -138,7 +139,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
 
     "return authenticator if an authenticator is stored for the token located in the query string" in new Context {
       implicit val request = FakeRequest("GET", s"?${settings.fieldName}=${authenticator.id}")
-
+      implicit val dyn = FakeDynamicEnvironment()
       settings.requestParts returns Some(Seq(RequestPart.QueryString))
       repository.find(authenticator.id) returns Future.successful(Some(authenticator))
 
@@ -147,7 +148,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
 
     "throws an AuthenticatorRetrievalException exception if an error occurred during retrieval" in new Context {
       implicit val request = FakeRequest().withHeaders(settings.fieldName -> authenticator.id)
-
+      implicit val dyn = FakeDynamicEnvironment()
       repository.find(authenticator.id) returns Future.failed(new RuntimeException("Cannot find authenticator"))
 
       await(service.retrieve) must throwA[AuthenticatorRetrievalException].like {
@@ -162,6 +163,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
       repository.add(any) answers { p => Future.successful(p.asInstanceOf[BearerTokenAuthenticator]) }
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val token = await(service.init(authenticator))
 
       token must be equalTo authenticator.id
@@ -172,6 +174,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
       repository.add(any) returns Future.failed(new Exception("Cannot store authenticator"))
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service.init(authenticator)) must throwA[AuthenticatorInitializationException].like {
         case e =>
@@ -241,6 +244,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
       repository.update(any) returns Future.successful(authenticator)
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service.update(authenticator, Results.Ok))
 
@@ -251,6 +255,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
       repository.update(any) answers { p => Future.successful(p.asInstanceOf[BearerTokenAuthenticator]) }
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val result = service.update(authenticator, Results.Ok)
 
       status(result) must be equalTo OK
@@ -260,6 +265,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
       repository.update(any) returns Future.failed(new Exception("Cannot store authenticator"))
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service.update(authenticator, Results.Ok)) must throwA[AuthenticatorUpdateException].like {
         case e =>
@@ -271,6 +277,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
   "The `renew` method of the service" should {
     "remove the old authenticator from backing store" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime
       val id = "new-test-id"
 
@@ -286,6 +293,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
 
     "renew the authenticator and return the response with a new bearer token" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime
       val id = "new-test-id"
 
@@ -301,6 +309,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
 
     "throws an AuthenticatorRenewalException exception if an error occurred during renewal" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime
       val id = "new-test-id"
 
@@ -319,6 +328,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
   "The `discard` method of the service" should {
     "remove authenticator from backing store" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       repository.remove(authenticator.id) returns Future.successful(authenticator)
 
@@ -329,6 +339,7 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
 
     "throws an AuthenticatorDiscardingException exception if an error occurred during discarding" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val okResult = Results.Ok
 
       repository.remove(authenticator.id) returns Future.failed(new Exception("Cannot remove authenticator"))

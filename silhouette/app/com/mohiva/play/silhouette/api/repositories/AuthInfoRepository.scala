@@ -15,7 +15,7 @@
  */
 package com.mohiva.play.silhouette.api.repositories
 
-import com.mohiva.play.silhouette.api.{ AuthInfo, LoginInfo }
+import com.mohiva.play.silhouette.api.{ AuthInfo, DynamicEnvironment, LoginInfo }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
  * able to authenticate through different providers, then make sure that the auth info for
  * every linked login info gets stored separately.
  */
-trait AuthInfoRepository {
+trait AuthInfoRepository[D <: DynamicEnvironment] {
 
   /**
    * Finds the auth info which is linked with the specified login info.
@@ -37,7 +37,7 @@ trait AuthInfoRepository {
    * @tparam T The type of the auth info to handle.
    * @return The found auth info or None if no auth info could be found for the given login info.
    */
-  def find[T <: AuthInfo](loginInfo: LoginInfo)(implicit tag: ClassTag[T]): Future[Option[T]]
+  def find[T <: AuthInfo](loginInfo: LoginInfo)(implicit tag: ClassTag[T], dyn: D): Future[Option[T]]
 
   /**
    * Adds new auth info for the given login info.
@@ -47,7 +47,7 @@ trait AuthInfoRepository {
    * @tparam T The type of the auth info to handle.
    * @return The saved auth info.
    */
-  def add[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T): Future[T]
+  def add[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T)(implicit dyn: D): Future[T]
 
   /**
    * Updates the auth info for the given login info.
@@ -57,7 +57,7 @@ trait AuthInfoRepository {
    * @tparam T The type of the auth info to handle.
    * @return The updated auth info.
    */
-  def update[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T): Future[T]
+  def update[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T)(implicit dyn: D): Future[T]
 
   /**
    * Saves the auth info for the given login info.
@@ -70,7 +70,7 @@ trait AuthInfoRepository {
    * @tparam T The type of the auth info to handle.
    * @return The updated auth info.
    */
-  def save[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T): Future[T]
+  def save[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T)(implicit dyn: D): Future[T]
 
   /**
    * Removes the auth info for the given login info.
@@ -80,5 +80,5 @@ trait AuthInfoRepository {
    * @tparam T The type of the auth info to handle.
    * @return A future to wait for the process to be completed.
    */
-  def remove[T <: AuthInfo](loginInfo: LoginInfo)(implicit tag: ClassTag[T]): Future[Unit]
+  def remove[T <: AuthInfo](loginInfo: LoginInfo)(implicit tag: ClassTag[T], dyn: D): Future[Unit]
 }

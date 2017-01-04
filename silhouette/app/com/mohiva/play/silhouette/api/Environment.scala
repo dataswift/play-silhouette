@@ -15,7 +15,7 @@
  */
 package com.mohiva.play.silhouette.api
 
-import com.mohiva.play.silhouette.api.services.{ AuthenticatorService, IdentityService }
+import com.mohiva.play.silhouette.api.services.{ AuthenticatorService, DynamicEnvironmentProviderService, IdentityService }
 import com.mohiva.play.silhouette.api.util.ExecutionContextProvider
 
 import scala.concurrent.ExecutionContext
@@ -44,6 +44,7 @@ import scala.concurrent.ExecutionContext
 trait Env {
   type I <: Identity
   type A <: Authenticator
+  type D <: DynamicEnvironment
 }
 
 /**
@@ -62,21 +63,28 @@ trait Environment[E <: Env] extends ExecutionContextProvider {
    *
    * @return The identity service implementation.
    */
-  def identityService: IdentityService[E#I]
+  def identityService: IdentityService[E#I, E#D]
 
   /**
    * Gets the authenticator service implementation.
    *
    * @return The authenticator service implementation.
    */
-  def authenticatorService: AuthenticatorService[E#A]
+  def authenticatorService: AuthenticatorService[E#A, E#D]
+
+  /**
+   * Gets the dynamic environment provider service implementation.
+   *
+   * @return The dynamic environment provide service implementation.
+   */
+  def dynamicEnvironmentProviderService: DynamicEnvironmentProviderService[E#D]
 
   /**
    * Gets the list of request providers.
    *
    * @return The list of request providers.
    */
-  def requestProviders: Seq[RequestProvider]
+  def requestProviders: Seq[RequestProvider[E#D]]
 
   /**
    * The event bus implementation.
@@ -96,14 +104,17 @@ trait Environment[E <: Env] extends ExecutionContextProvider {
  */
 object Environment {
   def apply[E <: Env](
-    identityServiceImpl: IdentityService[E#I],
-    authenticatorServiceImpl: AuthenticatorService[E#A],
-    requestProvidersImpl: Seq[RequestProvider],
+    identityServiceImpl: IdentityService[E#I, E#D],
+    authenticatorServiceImpl: AuthenticatorService[E#A, E#D],
+    requestProvidersImpl: Seq[RequestProvider[E#D]],
+    dynamicEnvironmentProviderImpl: DynamicEnvironmentProviderService[E#D],
     eventBusImpl: EventBus)(implicit ec: ExecutionContext) = new Environment[E] {
     val identityService = identityServiceImpl
     val authenticatorService = authenticatorServiceImpl
     val requestProviders = requestProvidersImpl
+    val dynamicEnvironmentProviderService = dynamicEnvironmentProviderImpl
     val eventBus = eventBusImpl
     val executionContext = ec
   }
 }
+

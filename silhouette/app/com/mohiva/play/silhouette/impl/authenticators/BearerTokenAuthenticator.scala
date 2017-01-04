@@ -21,7 +21,7 @@ import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
 import com.mohiva.play.silhouette.api.services.AuthenticatorService._
 import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService }
 import com.mohiva.play.silhouette.api.util._
-import com.mohiva.play.silhouette.api.{ ExpirableAuthenticator, Logger, LoginInfo, StorableAuthenticator }
+import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticatorService._
 import org.joda.time.DateTime
 import play.api.mvc.{ RequestHeader, Result }
@@ -76,7 +76,7 @@ class BearerTokenAuthenticatorService(
   repository: AuthenticatorRepository[BearerTokenAuthenticator],
   idGenerator: IDGenerator,
   clock: Clock)(implicit val executionContext: ExecutionContext)
-  extends AuthenticatorService[BearerTokenAuthenticator]
+  extends AuthenticatorService[BearerTokenAuthenticator, DynamicEnvironment]
   with Logger {
 
   /**
@@ -107,7 +107,7 @@ class BearerTokenAuthenticatorService(
    * @tparam B The type of the request body.
    * @return Some authenticator or None if no authenticator could be found in request.
    */
-  override def retrieve[B](implicit request: ExtractableRequest[B]): Future[Option[BearerTokenAuthenticator]] = {
+  override def retrieve[B](implicit request: ExtractableRequest[B], dyn: DynamicEnvironment): Future[Option[BearerTokenAuthenticator]] = {
     Future.fromTry(Try(request.extractString(settings.fieldName, settings.requestParts))).flatMap {
       case Some(token) => repository.find(token)
       case None        => Future.successful(None)
@@ -124,7 +124,7 @@ class BearerTokenAuthenticatorService(
    * @param request The request header.
    * @return The serialized authenticator value.
    */
-  override def init(authenticator: BearerTokenAuthenticator)(implicit request: RequestHeader): Future[String] = {
+  override def init(authenticator: BearerTokenAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[String] = {
     repository.add(authenticator).map { a =>
       a.id
     }.recover {
@@ -183,7 +183,7 @@ class BearerTokenAuthenticatorService(
    */
   override def update(authenticator: BearerTokenAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     repository.update(authenticator).map { a =>
       AuthenticatorResult(result)
@@ -205,7 +205,7 @@ class BearerTokenAuthenticatorService(
    */
   override def renew(authenticator: BearerTokenAuthenticator)(
     implicit
-    request: RequestHeader): Future[String] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[String] = {
 
     repository.remove(authenticator.id).flatMap { _ =>
       create(authenticator.loginInfo).flatMap(init)
@@ -227,7 +227,7 @@ class BearerTokenAuthenticatorService(
    */
   override def renew(authenticator: BearerTokenAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     renew(authenticator).flatMap(v => embed(v, result)).recover {
       case e => throw new AuthenticatorRenewalException(RenewError.format(ID, authenticator), e)

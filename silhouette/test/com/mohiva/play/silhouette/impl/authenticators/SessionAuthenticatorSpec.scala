@@ -18,6 +18,7 @@ package com.mohiva.play.silhouette.impl.authenticators
 import java.util.regex.Pattern
 
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._
+import com.mohiva.play.silhouette.api.actions.SecuredActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.crypto.Base64AuthenticatorEncoder
 import com.mohiva.play.silhouette.api.exceptions._
 import com.mohiva.play.silhouette.api.services.AuthenticatorService._
@@ -150,12 +151,13 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
   "The `retrieve` method of the service" should {
     "return None if no authenticator exists in session" in new Context {
       implicit val request = FakeRequest()
-
+      implicit val dyn = FakeDynamicEnvironment()
       await(service.retrieve) must beNone
     }
 
     "return None if session contains invalid json" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession(settings.sessionKey -> authenticatorEncoder.encode("{"))
+      implicit val dyn = FakeDynamicEnvironment()
 
       settings.useFingerprinting returns false
 
@@ -164,6 +166,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "return None if session contains valid json but invalid authenticator" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession(settings.sessionKey -> authenticatorEncoder.encode("{ \"test\": \"test\" }"))
+      implicit val dyn = FakeDynamicEnvironment()
 
       settings.useFingerprinting returns false
 
@@ -175,6 +178,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
       settings.useFingerprinting returns true
       authenticator.fingerprint returns Some("test")
 
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withSession(settings.sessionKey -> authenticatorEncoder.encode(Json.toJson(authenticator).toString()))
 
       await(service.retrieve) must beNone
@@ -185,12 +189,14 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
       settings.useFingerprinting returns true
       authenticator.fingerprint returns Some("test")
 
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withSession(settings.sessionKey -> authenticatorEncoder.encode(Json.toJson(authenticator).toString()))
 
       await(service.retrieve) must beSome(authenticator)
     }
 
     "return authenticator if fingerprinting is disabled" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withSession(settings.sessionKey -> authenticatorEncoder.encode(Json.toJson(authenticator).toString()))
 
       settings.useFingerprinting returns false
@@ -199,6 +205,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
     }
 
     "decode an authenticator" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest()
         .withSession(settings.sessionKey -> authenticatorEncoder.encode(Json.toJson(authenticator).toString()))
 
@@ -208,6 +215,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
     }
 
     "throws an AuthenticatorRetrievalException exception if an error occurred during retrieval" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withSession(settings.sessionKey -> authenticatorEncoder.encode(Json.toJson(authenticator).toString()))
 
       fingerprintGenerator.generate(any) throws new RuntimeException("Could not generate fingerprint")
@@ -223,6 +231,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
   "The `init` method of the service" should {
     "return a session with an encoded authenticator" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val data = authenticatorEncoder.encode(Json.toJson(authenticator).toString())
       val session = await(service.init(authenticator))
 
@@ -231,6 +240,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "override existing authenticator from request" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession(settings.sessionKey -> "existing")
+      implicit val dyn = FakeDynamicEnvironment()
       val session = await(service.init(authenticator))
 
       unserialize(session.get(settings.sessionKey).get, authenticatorEncoder).get must be equalTo authenticator
@@ -238,6 +248,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "keep non authenticator related session data" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession("test" -> "test")
+      implicit val dyn = FakeDynamicEnvironment()
       val data = authenticatorEncoder.encode(Json.toJson(authenticator).toString())
       val session = await(service.init(authenticator))
 
@@ -249,6 +260,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
   "The result `embed` method of the service" should {
     "return the response with the session" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val data = authenticatorEncoder.encode(Json.toJson(authenticator).toString())
       val result = service.embed(Session(Map(settings.sessionKey -> data)), Results.Ok)
 
@@ -257,6 +269,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "override existing authenticator from request" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession(settings.sessionKey -> "existing")
+      implicit val dyn = FakeDynamicEnvironment()
       val data = authenticatorEncoder.encode(Json.toJson(authenticator).toString())
       val result = service.embed(Session(Map(settings.sessionKey -> data)), Results.Ok)
 
@@ -265,6 +278,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "keep non authenticator related session data" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession("request-other" -> "keep")
+      implicit val dyn = FakeDynamicEnvironment()
       val data = authenticatorEncoder.encode(Json.toJson(authenticator).toString())
       val result = service.embed(Session(Map(settings.sessionKey -> data)), Results.Ok.addingToSession(
         "result-other" -> "keep"
@@ -319,6 +333,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
   "The `update` method of the service" should {
     "update the session" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val data = authenticatorEncoder.encode(Json.toJson(authenticator).toString())
       val result = service.update(authenticator, Results.Ok)
 
@@ -328,6 +343,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "override existing authenticator from request" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession(settings.sessionKey -> "existing")
+      implicit val dyn = FakeDynamicEnvironment()
       val result = service.update(authenticator, Results.Ok)
 
       unserialize(session(result).get(settings.sessionKey).get, authenticatorEncoder).get must be equalTo authenticator
@@ -335,6 +351,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "non authenticator related session data" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession("request-other" -> "keep")
+      implicit val dyn = FakeDynamicEnvironment()
       val result = service.update(authenticator, Results.Ok.addingToSession(
         "result-other" -> "keep"
       ))
@@ -346,6 +363,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "throws an AuthenticatorUpdateException exception if an error occurred during update" in new Context {
       implicit val request = spy(FakeRequest())
+      implicit val dyn = FakeDynamicEnvironment()
 
       request.session throws new RuntimeException("Cannot get session")
 
@@ -359,6 +377,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
   "The `renew` method of the service" should {
     "renew the session" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = DateTime.now
       val data = authenticatorEncoder.encode(Json.toJson(authenticator.copy(
         lastUsedDateTime = now,
@@ -375,6 +394,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "override existing authenticator from request" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession(settings.sessionKey -> "existing")
+      implicit val dyn = FakeDynamicEnvironment()
       val now = DateTime.now
 
       settings.useFingerprinting returns false
@@ -390,6 +410,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "non authenticator related session data" in new WithApplication with Context {
       implicit val request = FakeRequest().withSession("request-other" -> "keep")
+      implicit val dyn = FakeDynamicEnvironment()
       val now = DateTime.now
 
       settings.useFingerprinting returns false
@@ -409,6 +430,7 @@ class SessionAuthenticatorSpec extends PlaySpecification with Mockito with NoLan
 
     "throws an AuthenticatorRenewalException exception if an error occurred during renewal" in new Context {
       implicit val request = spy(FakeRequest())
+      implicit val dyn = FakeDynamicEnvironment()
       val now = DateTime.now
       val okResult = (a: Authenticator) => Future.successful(Results.Ok)
 

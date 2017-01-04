@@ -55,6 +55,8 @@ package object test {
      */
     def withAuthenticator[E <: Env](authenticator: E#A)(implicit env: Environment[E]): FakeRequest[A] = {
       implicit val ec = env.executionContext
+      val eventualMaybeDynamicEnvironment = env.dynamicEnvironmentProviderService.retrieve(f)
+      implicit val dyn = await[Option[E#D]](eventualMaybeDynamicEnvironment).get
       val rh = env.authenticatorService.init(authenticator).map(v => env.authenticatorService.embed(v, f))
       new FakeRequest(
         id = rh.id,

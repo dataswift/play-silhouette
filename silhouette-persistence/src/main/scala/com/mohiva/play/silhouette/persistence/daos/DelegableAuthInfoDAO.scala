@@ -15,7 +15,7 @@
  */
 package com.mohiva.play.silhouette.persistence.daos
 
-import com.mohiva.play.silhouette.api.AuthInfo
+import com.mohiva.play.silhouette.api.{ AuthInfo, DynamicEnvironment }
 
 import scala.reflect.ClassTag
 
@@ -30,4 +30,4 @@ import scala.reflect.ClassTag
  * @param classTag The class tag for the type parameter.
  * @tparam T The type of the auth info to store.
  */
-abstract class DelegableAuthInfoDAO[T <: AuthInfo](implicit val classTag: ClassTag[T]) extends AuthInfoDAO[T]
+abstract class DelegableAuthInfoDAO[T <: AuthInfo, D <: DynamicEnvironment](implicit val classTag: ClassTag[T]) extends AuthInfoDAO[T, D]

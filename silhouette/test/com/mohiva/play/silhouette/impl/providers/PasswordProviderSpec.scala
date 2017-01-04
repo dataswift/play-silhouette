@@ -15,6 +15,7 @@
  */
 package com.mohiva.play.silhouette.impl.providers
 
+import com.mohiva.play.silhouette.api.actions.UserAwareActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.util._
 import org.specs2.mock.Mockito
@@ -44,7 +45,7 @@ trait PasswordProviderSpec extends PlaySpecification with Mockito {
     /**
      * The auth info repository mock.
      */
-    lazy val authInfoRepository = mock[AuthInfoRepository]
+    lazy val authInfoRepository = mock[AuthInfoRepository[FakeDynamicEnvironment]]
 
     /**
      * The password hasher registry.

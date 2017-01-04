@@ -16,6 +16,7 @@
 package com.mohiva.play.silhouette.impl.providers
 
 import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.api.actions.UserAwareActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.crypto.Base64
 import com.mohiva.play.silhouette.api.exceptions._
 import com.mohiva.play.silhouette.api.util._
@@ -35,6 +36,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
       val passwordInfo = PasswordInfo("unknown", "hashed(s3cr3t)")
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
       val request = FakeRequest().withHeaders(AUTHORIZATION -> encodeCredentials(credentials))
+      implicit val dyn = FakeDynamicEnvironment()
 
       authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
 
@@ -46,6 +48,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
     "return None if no auth info could be found for the given credentials" in new WithApplication with Context {
       val loginInfo = new LoginInfo(provider.id, credentials.identifier)
       val request = FakeRequest().withHeaders(AUTHORIZATION -> encodeCredentials(credentials))
+      implicit val dyn = FakeDynamicEnvironment()
 
       authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(None)
 
@@ -56,6 +59,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
       val request = FakeRequest().withHeaders(AUTHORIZATION -> encodeCredentials(credentials))
+      implicit val dyn = FakeDynamicEnvironment()
 
       fooHasher.matches(passwordInfo, credentials.password) returns false
       authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
@@ -64,11 +68,14 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
     }
 
     "return None if provider isn't responsible" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
+
       await(provider.authenticate(FakeRequest())) must beNone
     }
 
     "return None for wrong encoded credentials" in new WithApplication with Context {
       val request = FakeRequest().withHeaders(AUTHORIZATION -> "wrong")
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(provider.authenticate(request)) must beNone
     }
@@ -77,6 +84,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
       val request = FakeRequest().withHeaders(AUTHORIZATION -> encodeCredentials(credentials))
+      implicit val dyn = FakeDynamicEnvironment()
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
       authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
@@ -89,6 +97,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
       val passwordInfo = PasswordInfo("foo", "hashed(s3c:r3t)")
       val loginInfo = LoginInfo(provider.id, credentialsWithColon.identifier)
       val request = FakeRequest().withHeaders(AUTHORIZATION -> encodeCredentials(credentialsWithColon))
+      implicit val dyn = FakeDynamicEnvironment()
 
       fooHasher.matches(passwordInfo, credentialsWithColon.password) returns true
       authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
@@ -100,6 +109,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
       val passwordInfo = PasswordInfo("bar", "hashed(s3cr3t)")
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
       val request = FakeRequest().withHeaders(AUTHORIZATION -> encodeCredentials(credentials))
+      implicit val dyn = FakeDynamicEnvironment()
 
       fooHasher.hash(credentials.password) returns passwordInfo
       barHasher.matches(passwordInfo, credentials.password) returns true
@@ -114,6 +124,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
       val request = FakeRequest().withHeaders(AUTHORIZATION -> encodeCredentials(credentials))
+      implicit val dyn = FakeDynamicEnvironment()
 
       fooHasher.isDeprecated(passwordInfo) returns Some(true)
       fooHasher.hash(credentials.password) returns passwordInfo
@@ -127,6 +138,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec {
 
     "return None if Authorization method is not Basic and Base64 decoded header has ':'" in new WithApplication with Context {
       val request = FakeRequest().withHeaders(AUTHORIZATION -> Base64.encode("NotBasic foo:bar"))
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(provider.authenticate(request)) must beNone
     }

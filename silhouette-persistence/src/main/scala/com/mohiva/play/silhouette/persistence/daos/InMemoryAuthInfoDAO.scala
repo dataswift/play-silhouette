@@ -15,7 +15,7 @@
  */
 package com.mohiva.play.silhouette.persistence.daos
 
-import com.mohiva.play.silhouette.api.{ AuthInfo, LoginInfo }
+import com.mohiva.play.silhouette.api.{ AuthInfo, DynamicEnvironment, LoginInfo }
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,7 +29,7 @@ import scala.reflect.ClassTag
  *
  * @tparam T The type of the auth info to store.
  */
-class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[T] {
+class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag, D <: DynamicEnvironment] extends DelegableAuthInfoDAO[T, D] {
 
   /**
    * The data store for the auth info.
@@ -42,7 +42,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * @param loginInfo The linked login info.
    * @return The retrieved auth info or None if no auth info could be retrieved for the given login info.
    */
-  def find(loginInfo: LoginInfo): Future[Option[T]] = {
+  def find(loginInfo: LoginInfo)(implicit dyn: D): Future[Option[T]] = {
     Future.successful(data.get(loginInfo))
   }
 
@@ -53,7 +53,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * @param authInfo The auth info to add.
    * @return The added auth info.
    */
-  def add(loginInfo: LoginInfo, authInfo: T): Future[T] = {
+  def add(loginInfo: LoginInfo, authInfo: T)(implicit dyn: D): Future[T] = {
     data += (loginInfo -> authInfo)
     Future.successful(authInfo)
   }
@@ -65,7 +65,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * @param authInfo The auth info to update.
    * @return The updated auth info.
    */
-  def update(loginInfo: LoginInfo, authInfo: T): Future[T] = {
+  def update(loginInfo: LoginInfo, authInfo: T)(implicit dyn: D): Future[T] = {
     data += (loginInfo -> authInfo)
     Future.successful(authInfo)
   }
@@ -80,7 +80,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * @param authInfo The auth info to save.
    * @return The saved auth info.
    */
-  def save(loginInfo: LoginInfo, authInfo: T): Future[T] = {
+  def save(loginInfo: LoginInfo, authInfo: T)(implicit dyn: D): Future[T] = {
     find(loginInfo).flatMap {
       case Some(_) => update(loginInfo, authInfo)
       case None    => add(loginInfo, authInfo)
@@ -93,7 +93,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * @param loginInfo The login info for which the auth info should be removed.
    * @return A future to wait for the process to be completed.
    */
-  def remove(loginInfo: LoginInfo): Future[Unit] = {
+  def remove(loginInfo: LoginInfo)(implicit dyn: D): Future[Unit] = {
     data -= loginInfo
     Future.successful(())
   }

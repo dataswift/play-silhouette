@@ -17,15 +17,15 @@ package com.mohiva.play.silhouette.test
 
 import java.util.UUID
 
-import com.mohiva.play.silhouette.api._
+import com.mohiva.play.silhouette.api.{ DynamicEnvironment, _ }
 import com.mohiva.play.silhouette.api.crypto.{ Base64AuthenticatorEncoder, CookieSigner }
 import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
-import com.mohiva.play.silhouette.api.services.{ AuthenticatorService, IdentityService }
+import com.mohiva.play.silhouette.api.services.{ AuthenticatorService, DynamicEnvironmentProviderService, IdentityService }
 import com.mohiva.play.silhouette.api.util.Clock
 import com.mohiva.play.silhouette.impl.authenticators._
 import com.mohiva.play.silhouette.impl.util.{ DefaultFingerprintGenerator, SecureRandomIDGenerator }
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.mvc.RequestHeader
+import play.api.mvc.{ Request, RequestHeader }
 
 import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
@@ -45,7 +45,7 @@ case class FakeIdentity(loginInfo: LoginInfo) extends Identity
  * @param identities A list of (login info -> identity) pairs this service is responsible for.
  * @tparam I The type of the identity to handle.
  */
-class FakeIdentityService[I <: Identity](identities: (LoginInfo, I)*) extends IdentityService[I] {
+class FakeIdentityService[I <: Identity, D <: DynamicEnvironment](identities: (LoginInfo, I)*) extends IdentityService[I, D] {
 
   /**
    * Retrieves an identity that matches the specified login info.
@@ -53,7 +53,7 @@ class FakeIdentityService[I <: Identity](identities: (LoginInfo, I)*) extends Id
    * @param loginInfo The login info to retrieve an identity.
    * @return The retrieved identity or None if no identity could be retrieved for the given login info.
    */
-  def retrieve(loginInfo: LoginInfo): Future[Option[I]] = {
+  def retrieve(loginInfo: LoginInfo)(implicit dyn: D): Future[Option[I]] = {
     Future.successful(identities.find(_._1 == loginInfo).map(_._2))
   }
 }
@@ -173,14 +173,14 @@ object FakeAuthenticatorService {
    * @tparam T The type of the authenticator.
    * @return A fully configured authenticator instance.
    */
-  def apply[T <: Authenticator: TypeTag](): AuthenticatorService[T] = {
+  def apply[T <: Authenticator: TypeTag, D <: DynamicEnvironment](): AuthenticatorService[T, D] = {
     (typeOf[T] match {
       case t if t <:< typeOf[SessionAuthenticator]     => FakeSessionAuthenticatorService()
       case t if t <:< typeOf[CookieAuthenticator]      => FakeCookieAuthenticatorService()
       case t if t <:< typeOf[BearerTokenAuthenticator] => FakeBearerTokenAuthenticatorService()
       case t if t <:< typeOf[JWTAuthenticator]         => FakeJWTAuthenticatorService()
       case t if t <:< typeOf[DummyAuthenticator]       => FakeDummyAuthenticatorService()
-    }).asInstanceOf[AuthenticatorService[T]]
+    }).asInstanceOf[AuthenticatorService[T, D]]
   }
 }
 
@@ -213,6 +213,20 @@ object FakeAuthenticator {
   }
 }
 
+case class FakeDynamicEnvironment() extends DynamicEnvironment {
+  def id = "FakeDynamicEnvironment"
+}
+
+class FakeDynamicEnvironmentProviderService[D <: DynamicEnvironment](environment: D) extends DynamicEnvironmentProviderService[D] {
+  /**
+   * Retrieves a fake dynamic environment for a given request
+   *
+   * @param request The request for which to retrieve a dynamic environment
+   * @return The retrieved dynamic environment
+   */
+  def retrieve[B](request: Request[B]): Future[Option[D]] = Future.successful(Some(environment))
+}
+
 /**
  * A fake environment implementation.
  *
@@ -225,7 +239,8 @@ object FakeAuthenticator {
  */
 case class FakeEnvironment[E <: Env](
   identities: Seq[(LoginInfo, E#I)],
-  requestProviders: Seq[RequestProvider] = Seq(),
+  dynamicEnvironment: E#D,
+  requestProviders: Seq[RequestProvider[E#D]] = Seq(),
   eventBus: EventBus = EventBus())(
   implicit
   val executionContext: ExecutionContext, tt: TypeTag[E#A])
@@ -234,10 +249,15 @@ case class FakeEnvironment[E <: Env](
   /**
    * The identity service implementation.
    */
-  val identityService: IdentityService[E#I] = new FakeIdentityService[E#I](identities: _*)
+  val identityService: IdentityService[E#I, E#D] = new FakeIdentityService[E#I, E#D](identities: _*)
+
+  /**
+   * The dynamic environment provider implementation.
+   */
+  val dynamicEnvironmentProviderService: DynamicEnvironmentProviderService[E#D] = new FakeDynamicEnvironmentProviderService[E#D](dynamicEnvironment)
 
   /**
    * The authenticator service implementation.
    */
-  val authenticatorService: AuthenticatorService[E#A] = FakeAuthenticatorService[E#A]()
+  val authenticatorService: AuthenticatorService[E#A, E#D] = FakeAuthenticatorService[E#A, E#D]()
 }

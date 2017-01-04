@@ -19,6 +19,7 @@ import java.util.regex.Pattern
 
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._
 import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.api.actions.SecuredActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.crypto.{ Base64, Base64AuthenticatorEncoder }
 import com.mohiva.play.silhouette.api.exceptions._
 import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
@@ -176,6 +177,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
   "The `create` method of the service" should {
     "return an authenticator with the generated ID" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val id = "test-id"
 
       idGenerator.generate returns Future.successful(id)
@@ -186,6 +188,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "return an authenticator with the current date as lastUsedDateTime" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime
 
       idGenerator.generate returns Future.successful("test-id")
@@ -196,6 +199,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "return an authenticator which expires in 12 hours(default value)" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime
 
       idGenerator.generate returns Future.successful("test-id")
@@ -206,6 +210,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "return an authenticator which expires in 6 hours" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val sixHours = 6 hours
       val now = new DateTime
 
@@ -218,6 +223,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "throws an AuthenticatorCreationException exception if an error occurred during creation" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       idGenerator.generate returns Future.failed(new Exception("Could not generate ID"))
 
@@ -231,11 +237,13 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
   "The `retrieve` method of the service" should {
     "return None if no authenticator header exists" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service(None).retrieve) must beNone
     }
 
     "return None if DAO is enabled and no authenticator is stored for the token located in the header" in new Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withHeaders(settings.fieldName -> "not-stored")
 
       repository.find(authenticator.id) returns Future.successful(None)
@@ -244,6 +252,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
     }
 
     "return authenticator if DAO is enabled and an authenticator is stored for the token located in the the header" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withHeaders(settings.fieldName -> serialize(authenticator, authenticatorEncoder, settings))
 
       repository.find(authenticator.id) returns Future.successful(Some(authenticator.copy(
@@ -258,6 +267,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
     }
 
     "return authenticator if DAO is enabled and an authenticator is stored for the token located in the the query string" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest("GET", s"?${settings.fieldName}=${serialize(authenticator, authenticatorEncoder, settings)}")
 
       settings.requestParts returns Some(Seq(RequestPart.QueryString))
@@ -273,6 +283,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
     }
 
     "return authenticator if DAO is disabled and authenticator was found in the header" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withHeaders(settings.fieldName -> serialize(authenticator, authenticatorEncoder, settings))
 
       await(service(None).retrieve) must beSome(authenticator.copy(
@@ -284,6 +295,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "return authenticator if DAO is disabled and authenticator was found in the query string" in new WithApplication with Context {
       implicit val request = FakeRequest("GET", s"?${settings.fieldName}=${serialize(authenticator, authenticatorEncoder, settings)}")
+      implicit val dyn = FakeDynamicEnvironment()
 
       settings.requestParts returns Some(Seq(RequestPart.QueryString))
       await(service(None).retrieve) must beSome(authenticator.copy(
@@ -294,6 +306,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
     }
 
     "throws an AuthenticatorRetrievalException exception if an error occurred during retrieval" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest().withHeaders(settings.fieldName -> serialize(authenticator, authenticatorEncoder, settings))
 
       repository.find(authenticator.id) returns Future.failed(new RuntimeException("Cannot find authenticator"))
@@ -308,6 +321,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
   "The `init` method of the service" should {
     "return the token if DAO is enabled and authenticator could be saved in backing store" in new WithApplication with Context {
       repository.add(any) answers { p => Future.successful(p.asInstanceOf[JWTAuthenticator]) }
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest()
 
       val token = await(service(Some(repository)).init(authenticator))
@@ -317,6 +331,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
     }
 
     "return the token if DAO is disabled" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest()
 
       val token = await(service(None).init(authenticator))
@@ -327,7 +342,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "throws an AuthenticatorInitializationException exception if an error occurred during initialization" in new Context {
       repository.add(any) returns Future.failed(new Exception("Cannot store authenticator"))
-
+      implicit val dyn = FakeDynamicEnvironment()
       implicit val request = FakeRequest()
       val okResult = Future.successful(Results.Ok)
 
@@ -341,6 +356,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
   "The result `embed` method of the service" should {
     "return the response with a header" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val token = serialize(authenticator, authenticatorEncoder, settings)
 
       val result = service(Some(repository)).embed(token, Results.Ok)
@@ -351,6 +367,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
   "The request `embed` method of the service" should {
     "return the request with a header " in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       val token = serialize(authenticator, authenticatorEncoder, settings)
       val request = service(Some(repository)).embed(token, FakeRequest())
 
@@ -358,6 +375,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
     }
 
     "override an existing token" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       val token = serialize(authenticator, authenticatorEncoder, settings)
       val request = service(Some(repository)).embed(token, FakeRequest().withHeaders(settings.fieldName -> "test"))
 
@@ -365,6 +383,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
     }
 
     "keep non authenticator related headers" in new WithApplication with Context {
+      implicit val dyn = FakeDynamicEnvironment()
       val token = serialize(authenticator, authenticatorEncoder, settings)
       val request = service(Some(repository)).embed(token, FakeRequest().withHeaders("test" -> "test"))
 
@@ -400,6 +419,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
       repository.update(any) returns Future.successful(authenticator)
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service(Some(repository)).update(authenticator, Results.Ok))
 
@@ -410,6 +430,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
       repository.update(any) answers { p => Future.successful(p.asInstanceOf[JWTAuthenticator]) }
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val result = service(Some(repository)).update(authenticator, Results.Ok)
 
       status(result) must be equalTo OK
@@ -421,6 +442,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
       repository.update(any) answers { p => Future.successful(p.asInstanceOf[JWTAuthenticator]) }
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val result = service(None).update(authenticator, Results.Ok)
 
       status(result) must be equalTo OK
@@ -432,6 +454,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
       repository.update(any) returns Future.failed(new Exception("Cannot store authenticator"))
 
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service(Some(repository)).update(authenticator, Results.Ok)) must throwA[AuthenticatorUpdateException].like {
         case e =>
@@ -443,6 +466,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
   "The `renew` method of the service" should {
     "renew the authenticator and return the response with a new JWT if DAO is enabled" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime(2015, 2, 25, 19, 0, 0, 0)
       val id = "new-test-id"
 
@@ -465,6 +489,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "renew an authenticator with custom claims" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime(2015, 2, 25, 19, 0, 0, 0)
       val id = "new-test-id"
 
@@ -488,6 +513,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "renew the authenticator and return the response with a new JWT if DAO is disabled" in new WithApplication with Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime(2015, 2, 25, 19, 0, 0, 0)
       val id = "new-test-id"
 
@@ -507,6 +533,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "throws an AuthenticatorRenewalException exception if an error occurred during renewal" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val now = new DateTime
       val id = "new-test-id"
 
@@ -525,6 +552,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
   "The `discard` method of the service" should {
     "remove authenticator from backing store if DAO is enabled" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       repository.remove(authenticator.id) returns Future.successful(authenticator)
 
@@ -535,6 +563,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "do not remove the authenticator from backing store if DAO is disabled" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
 
       await(service(None).discard(authenticator, Results.Ok))
 
@@ -543,6 +572,7 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
     "throws an AuthenticatorDiscardingException exception if an error occurred during discarding" in new Context {
       implicit val request = FakeRequest()
+      implicit val dyn = FakeDynamicEnvironment()
       val okResult = Results.Ok
 
       repository.remove(authenticator.id) returns Future.failed(new Exception("Cannot remove authenticator"))

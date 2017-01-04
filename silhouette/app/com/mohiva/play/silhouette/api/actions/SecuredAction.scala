@@ -39,7 +39,7 @@ import scala.language.{ higherKinds, reflectiveCalls }
  * @tparam E The type of the environment.
  * @tparam B The type of the request body.
  */
-case class SecuredRequest[E <: Env, B](identity: E#I, authenticator: E#A, request: Request[B]) extends WrappedRequest(request)
+case class SecuredRequest[E <: Env, B](identity: E#I, authenticator: E#A, dynamicEnvironment: E#D, request: Request[B]) extends WrappedRequest(request)
 
 /**
  * Request handler builder implementation to provide the foundation for secured request handlers.
@@ -83,27 +83,36 @@ case class SecuredRequestHandlerBuilder[E <: Env](
    * @return A handler result.
    */
   override def invokeBlock[B, T](block: SecuredRequest[E, B] => Future[HandlerResult[T]])(implicit request: Request[B]): Future[HandlerResult[T]] = {
-    withAuthorization(handleAuthentication).flatMap {
-      // A user is both authenticated and authorized. The request will be granted
-      case (Some(authenticator), Some(identity), Some(authorized)) if authorized =>
-        environment.eventBus.publish(AuthenticatedEvent(identity, request))
-        handleBlock(authenticator, a => block(SecuredRequest(identity, a, request)))
-      // A user is authenticated but not authorized. The request will be forbidden
-      case (Some(authenticator), Some(identity), _) =>
-        environment.eventBus.publish(NotAuthorizedEvent(identity, request))
-        handleBlock(authenticator, _ => errorHandler.onNotAuthorized.map(r => HandlerResult(r)))
-      // An authenticator but no user was found. The request will ask for authentication and the authenticator will be discarded
-      case (Some(authenticator), None, _) =>
-        environment.eventBus.publish(NotAuthenticatedEvent(request))
-        for {
-          result <- errorHandler.onNotAuthenticated
-          discardedResult <- environment.authenticatorService.discard(authenticator.extract, result)
-        } yield HandlerResult(discardedResult)
-      // No authenticator and no user was found. The request will ask for authentication
-      case _ =>
+    environment.dynamicEnvironmentProviderService.retrieve[B](request) flatMap {
+      case Some(dynamicEnvironment) =>
+        implicit val dyn = dynamicEnvironment
+        withAuthorization(handleAuthentication).flatMap {
+          // A user is both authenticated and authorized. The request will be granted
+          case (Some(authenticator), Some(identity), Some(authorized)) if authorized =>
+            environment.eventBus.publish(AuthenticatedEvent(identity, request))
+            handleBlock(authenticator, a => block(SecuredRequest(identity, a, dynamicEnvironment, request)))
+          // A user is authenticated but not authorized. The request will be forbidden
+          case (Some(authenticator), Some(identity), _) =>
+            environment.eventBus.publish(NotAuthorizedEvent(identity, request))
+            handleBlock(authenticator, _ => errorHandler.onNotAuthorized.map(r => HandlerResult(r)))
+          // An authenticator but no user was found. The request will ask for authentication and the authenticator will be discarded
+          case (Some(authenticator), None, _) =>
+            environment.eventBus.publish(NotAuthenticatedEvent(request))
+            for {
+              result <- errorHandler.onNotAuthenticated
+              discardedResult <- environment.authenticatorService.discard(authenticator.extract, result)
+            } yield HandlerResult(discardedResult)
+          // No authenticator and no user was found. The request will ask for authentication
+          case _ =>
+            environment.eventBus.publish(NotAuthenticatedEvent(request))
+            errorHandler.onNotAuthenticated.map(r => HandlerResult(r))
+        }
+      case None =>
+        // TODO: handle the case when no such environment exists
         environment.eventBus.publish(NotAuthenticatedEvent(request))
         errorHandler.onNotAuthenticated.map(r => HandlerResult(r))
     }
+
   }
 
   /**

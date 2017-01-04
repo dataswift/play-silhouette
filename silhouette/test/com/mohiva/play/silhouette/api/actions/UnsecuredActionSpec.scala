@@ -22,7 +22,7 @@ import akka.testkit.TestProbe
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.actions.UnsecuredActionSpec._
 import com.mohiva.play.silhouette.api.exceptions.NotAuthorizedException
-import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService, IdentityService }
+import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService, DynamicEnvironmentProviderService, IdentityService }
 import net.codingwell.scalaguice.ScalaModule
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.matcher.JsonMatchers
@@ -48,7 +48,8 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
   "The `UnsecuredAction` action" should {
     "grant access if no valid authenticator can be retrieved" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(None)
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(None)
 
         val result = controller.defaultAction(request)
 
@@ -59,7 +60,8 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
 
     "grant access and discard authenticator if an invalid authenticator can be retrieved" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(Some(authenticator.copy(isValid = false)))
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(Some(authenticator.copy(isValid = false)))
         env.authenticatorService.discard(any, any)(any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
@@ -74,11 +76,12 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
 
     "grant access and discard authenticator if no identity could be found for an authenticator" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(Some(authenticator))
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(Some(authenticator))
         env.authenticatorService.discard(any, any)(any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo) returns Future.successful(None)
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(None)
 
         val result = controller.defaultAction(request)
 
@@ -90,12 +93,13 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
 
     "display local not-authorized result if user is authenticated" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(Some(authenticator))
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(Some(authenticator))
         env.authenticatorService.touch(any) returns Left(authenticator)
-        env.authenticatorService.update(any, any)(any) answers { (a, m) =>
+        env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
 
         val result = controller.actionWithErrorHandler(request)
 
@@ -106,12 +110,13 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
 
     "display global not-authorized result if user is authenticated" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(Some(authenticator))
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(Some(authenticator))
         env.authenticatorService.touch(any) returns Left(authenticator)
-        env.authenticatorService.update(any, any)(any) answers { (a, m) =>
+        env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
 
         val result = controller.defaultAction(request)
 
@@ -124,31 +129,33 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
   "The `UnsecuredRequestHandler`" should {
     "return status 403 if user is authenticated" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(Some(authenticator))
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(Some(authenticator))
         env.authenticatorService.touch(any) returns Left(authenticator)
-        env.authenticatorService.update(any, any)(any) answers { (a, m) =>
+        env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
 
         val result = controller.defaultHandler(request)
 
         status(result) must equalTo(FORBIDDEN)
         there was one(env.authenticatorService).touch(any)
-        there was one(env.authenticatorService).update(any, any)(any)
+        there was one(env.authenticatorService).update(any, any)(any, any)
       }
     }
 
     "return the data if user is not authenticated" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(None)
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(None)
 
         val result = controller.defaultHandler(request)
 
         status(result) must equalTo(OK)
         contentAsString(result) must be equalTo "data"
         there was no(env.authenticatorService).touch(any)
-        there was no(env.authenticatorService).update(any, any)(any)
+        there was no(env.authenticatorService).update(any, any)(any, any)
       }
     }
   }
@@ -156,7 +163,8 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
   "The `exceptionHandler` method of the UnsecuredErrorHandler" should {
     "translate an ForbiddenException into a 403 Forbidden result" in new InjectorContext {
       new WithApplication(app) with Context {
-        env.authenticatorService.retrieve(any) returns Future.successful(None)
+        env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
+        env.authenticatorService.retrieve(any, any) returns Future.successful(None)
         env.authenticatorService.discard(any, any)(any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
@@ -178,9 +186,10 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
      * The Silhouette environment.
      */
     lazy val env = Environment[UnsecuredEnv](
-      mock[IdentityService[UnsecuredEnv#I]],
-      mock[AuthenticatorService[UnsecuredEnv#A]],
+      mock[IdentityService[UnsecuredEnv#I, UnsecuredEnv#D]],
+      mock[AuthenticatorService[UnsecuredEnv#A, UnsecuredEnv#D]],
       Seq(),
+      mock[DynamicEnvironmentProviderService[UnsecuredEnv#D]],
       new EventBus
     )
 
@@ -281,29 +290,30 @@ class UnsecuredActionSpec extends PlaySpecification with Mockito with JsonMatche
     /**
      * A mock that simulates a token request provider.
      */
-    lazy val tokenRequestProvider = mock[RequestProvider]
+    lazy val tokenRequestProvider = mock[RequestProvider[UnsecuredEnv#D]]
 
     /**
      * A mock that simulates a basic auth request provider.
      */
-    lazy val basicAuthRequestProvider = mock[RequestProvider]
+    lazy val basicAuthRequestProvider = mock[RequestProvider[UnsecuredEnv#D]]
 
     /**
      * A non request provider.
      */
-    lazy val nonRequestProvider = mock[RequestProvider]
+    lazy val nonRequestProvider = mock[RequestProvider[UnsecuredEnv#D]]
 
     /**
      * The Silhouette environment.
      */
     override lazy val env = Environment[UnsecuredEnv](
-      mock[IdentityService[FakeIdentity]],
-      mock[AuthenticatorService[FakeAuthenticator]],
+      mock[IdentityService[FakeIdentity, FakeDynamicEnvironment]],
+      mock[AuthenticatorService[FakeAuthenticator, FakeDynamicEnvironment]],
       Seq(
         tokenRequestProvider,
         basicAuthRequestProvider,
         nonRequestProvider
       ),
+      mock[DynamicEnvironmentProviderService[FakeDynamicEnvironment]],
       new EventBus
     )
   }
@@ -320,6 +330,7 @@ object UnsecuredActionSpec {
   trait UnsecuredEnv extends Env {
     type I = FakeIdentity
     type A = FakeAuthenticator
+    type D = FakeDynamicEnvironment
   }
 
   /**
@@ -335,6 +346,13 @@ object UnsecuredActionSpec {
    * @param loginInfo The linked login info.
    */
   case class FakeAuthenticator(loginInfo: LoginInfo, isValid: Boolean = true) extends Authenticator
+
+  /**
+   * A test dynamic environment.
+   */
+  case class FakeDynamicEnvironment() extends DynamicEnvironment {
+    def id = "FakeDynamicEnvironment"
+  }
 
   /**
    * The global unsecured error handler.

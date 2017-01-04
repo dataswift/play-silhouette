@@ -114,7 +114,7 @@ trait RequestHandlerBuilder[E <: Env, +R[_]] extends ExecutionContextProvider {
    * @tparam T The type of the data included in the handler result.
    * @return A handler result.
    */
-  protected def handleBlock[T](authenticator: Either[E#A, E#A], block: E#A => Future[HandlerResult[T]])(implicit request: RequestHeader) = {
+  protected def handleBlock[T](authenticator: Either[E#A, E#A], block: E#A => Future[HandlerResult[T]])(implicit request: RequestHeader, dyn: E#D) = {
     authenticator match {
       case Left(a)  => handleInitializedAuthenticator(a, block)
       case Right(a) => handleUninitializedAuthenticator(a, block)
@@ -134,7 +134,7 @@ trait RequestHandlerBuilder[E <: Env, +R[_]] extends ExecutionContextProvider {
    * @return A tuple which consists of (maybe the existing authenticator on the left or a
    *         new authenticator on the right -> maybe the identity).
    */
-  protected def handleAuthentication[B](implicit request: Request[B]): Future[(Option[Either[E#A, E#A]], Option[E#I])] = {
+  protected def handleAuthentication[B](implicit request: Request[B], dyn: E#D): Future[(Option[Either[E#A, E#A]], Option[E#I])] = {
     environment.authenticatorService.retrieve.flatMap {
       // A valid authenticator was found so we retrieve also the identity
       case Some(a) if a.isValid  => environment.identityService.retrieve(a.loginInfo).map(i => Some(Left(a)) -> i)
@@ -164,7 +164,7 @@ trait RequestHandlerBuilder[E <: Env, +R[_]] extends ExecutionContextProvider {
    * @tparam T The type of the data included in the handler result.
    * @return A handler result.
    */
-  private def handleInitializedAuthenticator[T](authenticator: E#A, block: E#A => Future[HandlerResult[T]])(implicit request: RequestHeader) = {
+  private def handleInitializedAuthenticator[T](authenticator: E#A, block: E#A => Future[HandlerResult[T]])(implicit request: RequestHeader, dyn: E#D) = {
     val auth = environment.authenticatorService.touch(authenticator)
     block(auth.fold(identity, identity)).flatMap {
       case hr @ HandlerResult(pr: AuthenticatorResult, _) => Future.successful(hr)
@@ -189,7 +189,7 @@ trait RequestHandlerBuilder[E <: Env, +R[_]] extends ExecutionContextProvider {
    * @tparam T The type of the data included in the handler result.
    * @return A handler result.
    */
-  private def handleUninitializedAuthenticator[T](authenticator: E#A, block: E#A => Future[HandlerResult[T]])(implicit request: RequestHeader) = {
+  private def handleUninitializedAuthenticator[T](authenticator: E#A, block: E#A => Future[HandlerResult[T]])(implicit request: RequestHeader, dyn: E#D) = {
     block(authenticator).flatMap {
       case hr @ HandlerResult(pr: AuthenticatorResult, _) => Future.successful(hr)
       case hr @ HandlerResult(pr, _) =>
@@ -210,8 +210,8 @@ trait RequestHandlerBuilder[E <: Env, +R[_]] extends ExecutionContextProvider {
    * @tparam B The type of the request body.
    * @return Some identity or None if authentication was not successful.
    */
-  private def handleRequestProviderAuthentication[B](implicit request: Request[B]): Future[Option[LoginInfo]] = {
-    def auth(providers: Seq[RequestProvider]): Future[Option[LoginInfo]] = {
+  private def handleRequestProviderAuthentication[B](implicit request: Request[B], dyn: E#D): Future[Option[LoginInfo]] = {
+    def auth(providers: Seq[RequestProvider[E#D]]): Future[Option[LoginInfo]] = {
       providers match {
         case Nil => Future.successful(None)
         case h :: t => h.authenticate(request).flatMap {

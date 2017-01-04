@@ -162,7 +162,7 @@ class CookieAuthenticatorService(
   fingerprintGenerator: FingerprintGenerator,
   idGenerator: IDGenerator,
   clock: Clock)(implicit val executionContext: ExecutionContext)
-  extends AuthenticatorService[CookieAuthenticator]
+  extends AuthenticatorService[CookieAuthenticator, DynamicEnvironment]
   with Logger {
 
   import CookieAuthenticator._
@@ -198,7 +198,7 @@ class CookieAuthenticatorService(
    * @tparam B The type of the request body.
    * @return Some authenticator or None if no authenticator could be found in request.
    */
-  override def retrieve[B](implicit request: ExtractableRequest[B]): Future[Option[CookieAuthenticator]] = {
+  override def retrieve[B](implicit request: ExtractableRequest[B], dyn: DynamicEnvironment): Future[Option[CookieAuthenticator]] = {
     Future.fromTry(Try {
       if (settings.useFingerprinting) Some(fingerprintGenerator.generate) else None
     }).flatMap { fingerprint =>
@@ -235,7 +235,7 @@ class CookieAuthenticatorService(
    * @param request The request header.
    * @return The serialized authenticator value.
    */
-  override def init(authenticator: CookieAuthenticator)(implicit request: RequestHeader): Future[Cookie] = {
+  override def init(authenticator: CookieAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[Cookie] = {
     (repository match {
       case Some(d) => d.add(authenticator).map(_.id)
       case None    => Future.successful(serialize(authenticator, cookieSigner, authenticatorEncoder))
@@ -308,7 +308,7 @@ class CookieAuthenticatorService(
    */
   override def update(authenticator: CookieAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     (repository match {
       case Some(d) => d.update(authenticator).map(_ => AuthenticatorResult(result))
@@ -339,7 +339,7 @@ class CookieAuthenticatorService(
    * @param request The request header.
    * @return The serialized expression of the authenticator.
    */
-  override def renew(authenticator: CookieAuthenticator)(implicit request: RequestHeader): Future[Cookie] = {
+  override def renew(authenticator: CookieAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[Cookie] = {
     (repository match {
       case Some(d) => d.remove(authenticator.id)
       case None    => Future.successful(())
@@ -363,7 +363,7 @@ class CookieAuthenticatorService(
    */
   override def renew(authenticator: CookieAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     renew(authenticator).flatMap(v => embed(v, result)).recover {
       case e => throw new AuthenticatorRenewalException(RenewError.format(ID, authenticator), e)

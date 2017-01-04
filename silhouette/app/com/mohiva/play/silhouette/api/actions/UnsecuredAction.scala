@@ -55,19 +55,25 @@ case class UnsecuredRequestHandlerBuilder[E <: Env](
    * @return A handler result.
    */
   override def invokeBlock[B, T](block: Request[B] => Future[HandlerResult[T]])(implicit request: Request[B]) = {
-    handleAuthentication.flatMap {
-      // A user is authenticated. The request will be forbidden
-      case (Some(authenticator), Some(identity)) =>
-        environment.eventBus.publish(NotAuthorizedEvent(identity, request))
-        handleBlock(authenticator, _ => errorHandler.onNotAuthorized.map(r => HandlerResult(r)))
-      // An authenticator but no user was found. The request will be granted and the authenticator will be discarded
-      case (Some(authenticator), None) =>
-        block(request).flatMap {
-          case hr @ HandlerResult(pr, d) =>
-            environment.authenticatorService.discard(authenticator.extract, pr).map(r => hr.copy(r))
+    environment.dynamicEnvironmentProviderService.retrieve[B](request) flatMap {
+      case Some(dynamicEnvironment) =>
+        implicit val dyn = dynamicEnvironment
+        handleAuthentication.flatMap {
+          // A user is authenticated. The request will be forbidden
+          case (Some(authenticator), Some(identity)) =>
+            environment.eventBus.publish(NotAuthorizedEvent(identity, request))
+            handleBlock(authenticator, _ => errorHandler.onNotAuthorized.map(r => HandlerResult(r)))
+          // An authenticator but no user was found. The request will be granted and the authenticator will be discarded
+          case (Some(authenticator), None) =>
+            block(request).flatMap {
+              case hr @ HandlerResult(pr, d) =>
+                environment.authenticatorService.discard(authenticator.extract, pr).map(r => hr.copy(r))
+            }
+          // No authenticator and no user was found. The request will be granted
+          case _ => block(request)
         }
-      // No authenticator and no user was found. The request will be granted
-      case _ => block(request)
+      case None =>
+        Future.failed(new RuntimeException("Could not find environment"))
     }
   }
 }

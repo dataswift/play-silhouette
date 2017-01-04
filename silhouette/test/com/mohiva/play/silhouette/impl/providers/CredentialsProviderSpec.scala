@@ -16,6 +16,7 @@
 package com.mohiva.play.silhouette.impl.providers
 
 import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.api.actions.UserAwareActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.exceptions._
 import com.mohiva.play.silhouette.api.util.{ Credentials, PasswordInfo }
 import com.mohiva.play.silhouette.impl.exceptions.{ IdentityNotFoundException, InvalidPasswordException }
@@ -32,9 +33,10 @@ class CredentialsProviderSpec extends PasswordProviderSpec {
 
   "The `authenticate` method" should {
     "throw IdentityNotFoundException if no auth info could be found for the given credentials" in new WithApplication with Context {
-      val loginInfo = new LoginInfo(provider.id, credentials.identifier)
+      implicit val dyn = FakeDynamicEnvironment()
+      val loginInfo = new LoginInfo(dyn.id, credentials.identifier)
 
-      authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(None)
+      authInfoRepository.find[PasswordInfo](any)(any, any) returns Future.successful(None)
 
       await(provider.authenticate(credentials)) must throwA[IdentityNotFoundException].like {
         case e => e.getMessage must beEqualTo(PasswordInfoNotFound.format(provider.id, loginInfo))
@@ -43,10 +45,11 @@ class CredentialsProviderSpec extends PasswordProviderSpec {
 
     "throw InvalidPasswordException if passwords does not match" in new WithApplication with Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
+      implicit val dyn = FakeDynamicEnvironment()
+      val loginInfo = LoginInfo(dyn.id, credentials.identifier)
 
       fooHasher.matches(passwordInfo, credentials.password) returns false
-      authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoRepository.find[PasswordInfo](any)(any, any) returns Future.successful(Some(passwordInfo))
 
       await(provider.authenticate(credentials)) must throwA[InvalidPasswordException].like {
         case e => e.getMessage must beEqualTo(PasswordDoesNotMatch.format(provider.id))
@@ -55,9 +58,10 @@ class CredentialsProviderSpec extends PasswordProviderSpec {
 
     "throw ConfigurationException if unsupported hasher is stored" in new WithApplication with Context {
       val passwordInfo = PasswordInfo("unknown", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
+      implicit val dyn = FakeDynamicEnvironment()
+      val loginInfo = LoginInfo(dyn.id, credentials.identifier)
 
-      authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoRepository.find[PasswordInfo](any)(any, any) returns Future.successful(Some(passwordInfo))
 
       await(provider.authenticate(credentials)) must throwA[ConfigurationException].like {
         case e => e.getMessage must beEqualTo(HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar"))
@@ -66,21 +70,23 @@ class CredentialsProviderSpec extends PasswordProviderSpec {
 
     "return login info if passwords does match" in new WithApplication with Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
+      implicit val dyn = FakeDynamicEnvironment()
+      val loginInfo = LoginInfo(dyn.id, credentials.identifier)
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoRepository.find[PasswordInfo](any)(any, any) returns Future.successful(Some(passwordInfo))
 
       await(provider.authenticate(credentials)) must be equalTo loginInfo
     }
 
     "re-hash password with new hasher if hasher is deprecated" in new WithApplication with Context {
       val passwordInfo = PasswordInfo("bar", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
+      implicit val dyn = FakeDynamicEnvironment()
+      val loginInfo = LoginInfo(dyn.id, credentials.identifier)
 
       fooHasher.hash(credentials.password) returns passwordInfo
       barHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoRepository.find[PasswordInfo](any)(any, any) returns Future.successful(Some(passwordInfo))
       authInfoRepository.update[PasswordInfo](loginInfo, passwordInfo) returns Future.successful(passwordInfo)
 
       await(provider.authenticate(credentials)) must be equalTo loginInfo
@@ -89,12 +95,13 @@ class CredentialsProviderSpec extends PasswordProviderSpec {
 
     "re-hash password with new hasher if hasher is deprecated" in new WithApplication with Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
+      implicit val dyn = FakeDynamicEnvironment()
+      val loginInfo = LoginInfo(dyn.id, credentials.identifier)
 
       fooHasher.isDeprecated(passwordInfo) returns Some(true)
       fooHasher.hash(credentials.password) returns passwordInfo
       fooHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoRepository.find[PasswordInfo](loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoRepository.find[PasswordInfo](any)(any, any) returns Future.successful(Some(passwordInfo))
       authInfoRepository.update[PasswordInfo](loginInfo, passwordInfo) returns Future.successful(passwordInfo)
 
       await(provider.authenticate(credentials)) must be equalTo loginInfo

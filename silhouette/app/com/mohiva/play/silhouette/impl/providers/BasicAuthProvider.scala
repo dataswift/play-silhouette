@@ -21,7 +21,7 @@ import com.mohiva.play.silhouette.api.crypto.Base64
 import com.mohiva.play.silhouette.api.exceptions.ConfigurationException
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.util._
-import com.mohiva.play.silhouette.api.{ Logger, LoginInfo, RequestProvider }
+import com.mohiva.play.silhouette.api.{ DynamicEnvironment, Logger, LoginInfo, RequestProvider }
 import com.mohiva.play.silhouette.impl.providers.BasicAuthProvider._
 import play.api.http.HeaderNames
 import play.api.mvc.{ Request, RequestHeader }
@@ -41,10 +41,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @param passwordHasherRegistry The password hashers used by the application.
  * @param executionContext The execution context to handle the asynchronous operations.
  */
-class BasicAuthProvider @Inject() (
-  protected val authInfoRepository: AuthInfoRepository,
+class BasicAuthProvider[D <: DynamicEnvironment] @Inject() (
+  protected val authInfoRepository: AuthInfoRepository[D],
   protected val passwordHasherRegistry: PasswordHasherRegistry)(implicit val executionContext: ExecutionContext)
-  extends RequestProvider with PasswordProvider with Logger {
+  extends RequestProvider[D] with PasswordProvider[D] with Logger {
 
   /**
    * Gets the provider ID.
@@ -60,7 +60,7 @@ class BasicAuthProvider @Inject() (
    * @tparam B The type of the body.
    * @return Some login info on successful authentication or None if the authentication was unsuccessful.
    */
-  override def authenticate[B](request: Request[B]): Future[Option[LoginInfo]] = {
+  override def authenticate[B](request: Request[B])(implicit dynamicEnvironment: D): Future[Option[LoginInfo]] = {
     getCredentials(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.identifier)

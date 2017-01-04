@@ -38,7 +38,7 @@ import scala.language.reflectiveCalls
  * @tparam E The type of the environment.
  * @tparam B The type of the request body.
  */
-case class UserAwareRequest[E <: Env, B](identity: Option[E#I], authenticator: Option[E#A], request: Request[B])
+case class UserAwareRequest[E <: Env, B](identity: Option[E#I], authenticator: Option[E#A], dynamicEnvironment: E#D, request: Request[B])
   extends WrappedRequest(request)
 
 /**
@@ -60,18 +60,24 @@ case class UserAwareRequestHandlerBuilder[E <: Env](environment: Environment[E])
    * @return A handler result.
    */
   override def invokeBlock[B, T](block: UserAwareRequest[E, B] => Future[HandlerResult[T]])(implicit request: Request[B]) = {
-    handleAuthentication.flatMap {
-      // A valid authenticator was found and the identity may be exists
-      case (Some(authenticator), identity) if authenticator.extract.isValid =>
-        handleBlock(authenticator, a => block(UserAwareRequest(identity, Some(a), request)))
-      // An invalid authenticator was found. The authenticator will be discarded
-      case (Some(authenticator), identity) if !authenticator.extract.isValid =>
-        block(UserAwareRequest(None, None, request)).flatMap {
-          case hr @ HandlerResult(pr, d) =>
-            environment.authenticatorService.discard(authenticator.extract, pr).map(r => hr.copy(r))
+    environment.dynamicEnvironmentProviderService.retrieve[B](request) flatMap {
+      case Some(dynamicEnvironment) =>
+        implicit val dyn = dynamicEnvironment
+        handleAuthentication.flatMap {
+          // A valid authenticator was found and the identity may be exists
+          case (Some(authenticator), identity) if authenticator.extract.isValid =>
+            handleBlock(authenticator, a => block(UserAwareRequest(identity, Some(a), dyn, request)))
+          // An invalid authenticator was found. The authenticator will be discarded
+          case (Some(authenticator), identity) if !authenticator.extract.isValid =>
+            block(UserAwareRequest(None, None, dyn, request)).flatMap {
+              case hr @ HandlerResult(pr, d) =>
+                environment.authenticatorService.discard(authenticator.extract, pr).map(r => hr.copy(r))
+            }
+          // No authenticator and no user was found
+          case _ => block(UserAwareRequest(None, None, dyn, request))
         }
-      // No authenticator and no user was found
-      case _ => block(UserAwareRequest(None, None, request))
+      case None =>
+        Future.failed(new RuntimeException("Could not find environment"))
     }
   }
 }

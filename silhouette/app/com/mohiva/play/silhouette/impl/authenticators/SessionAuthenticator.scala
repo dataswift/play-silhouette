@@ -22,7 +22,7 @@ import com.mohiva.play.silhouette.api.services.AuthenticatorService._
 import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService }
 import com.mohiva.play.silhouette.api.util.JsonFormats._
 import com.mohiva.play.silhouette.api.util.{ Clock, ExtractableRequest, FingerprintGenerator }
-import com.mohiva.play.silhouette.api.{ Authenticator, ExpirableAuthenticator, Logger, LoginInfo }
+import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.authenticators.SessionAuthenticatorService._
 import org.joda.time.DateTime
 import play.api.http.HeaderNames
@@ -125,7 +125,7 @@ class SessionAuthenticatorService(
   fingerprintGenerator: FingerprintGenerator,
   authenticatorEncoder: AuthenticatorEncoder,
   clock: Clock)(implicit val executionContext: ExecutionContext)
-  extends AuthenticatorService[SessionAuthenticator]
+  extends AuthenticatorService[SessionAuthenticator, DynamicEnvironment]
   with Logger {
 
   import SessionAuthenticator._
@@ -159,7 +159,7 @@ class SessionAuthenticatorService(
    * @tparam B The type of the request body.
    * @return Some authenticator or None if no authenticator could be found in request.
    */
-  override def retrieve[B](implicit request: ExtractableRequest[B]): Future[Option[SessionAuthenticator]] = {
+  override def retrieve[B](implicit request: ExtractableRequest[B], dyn: DynamicEnvironment): Future[Option[SessionAuthenticator]] = {
     Future.fromTry(Try {
       if (settings.useFingerprinting) Some(fingerprintGenerator.generate) else None
     }).map { fingerprint =>
@@ -186,7 +186,7 @@ class SessionAuthenticatorService(
    * @param request The request header.
    * @return The serialized authenticator value.
    */
-  override def init(authenticator: SessionAuthenticator)(implicit request: RequestHeader): Future[Session] = {
+  override def init(authenticator: SessionAuthenticator)(implicit request: RequestHeader, dyn: DynamicEnvironment): Future[Session] = {
     Future.successful(request.session + (settings.sessionKey -> serialize(authenticator, authenticatorEncoder)))
   }
 
@@ -242,7 +242,7 @@ class SessionAuthenticatorService(
    */
   override def update(authenticator: SessionAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     Future.fromTry(Try {
       AuthenticatorResult(result.addingToSession(settings.sessionKey -> serialize(authenticator, authenticatorEncoder)))
@@ -264,7 +264,7 @@ class SessionAuthenticatorService(
    */
   override def renew(authenticator: SessionAuthenticator)(
     implicit
-    request: RequestHeader): Future[Session] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[Session] = {
 
     create(authenticator.loginInfo).flatMap(init).recover {
       case e => throw new AuthenticatorRenewalException(RenewError.format(ID, authenticator), e)
@@ -284,7 +284,7 @@ class SessionAuthenticatorService(
    */
   override def renew(authenticator: SessionAuthenticator, result: Result)(
     implicit
-    request: RequestHeader): Future[AuthenticatorResult] = {
+    request: RequestHeader, dyn: DynamicEnvironment): Future[AuthenticatorResult] = {
 
     renew(authenticator).flatMap(v => embed(v, result)).recover {
       case e => throw new AuthenticatorRenewalException(RenewError.format(ID, authenticator), e)

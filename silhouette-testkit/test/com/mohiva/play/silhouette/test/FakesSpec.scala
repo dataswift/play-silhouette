@@ -30,6 +30,8 @@ import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.api.test.{ FakeRequest, PlaySpecification, WithApplication }
 
+import scala.concurrent.Future
+
 /**
  * Test case for the [[com.mohiva.play.silhouette.test]] helpers.
  */
@@ -39,15 +41,15 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     "return the identity for the given login info" in {
       val loginInfo = LoginInfo("test", "test")
       val identity = FakeIdentity(loginInfo)
-      val service = new FakeIdentityService[FakeIdentity](loginInfo -> identity)
-
+      implicit val dynamicEnvironment = FakeDynamicEnvironment()
+      val service = new FakeIdentityService[FakeIdentity, FakeDynamicEnvironment](loginInfo -> identity)
       await(service.retrieve(loginInfo)) must beSome(identity)
     }
 
     "return None if no identity could be found for the given login info" in {
       val loginInfo = LoginInfo("test", "test")
-      val service = new FakeIdentityService[FakeIdentity]()
-
+      val service = new FakeIdentityService[FakeIdentity, FakeDynamicEnvironment]()
+      implicit val dynamicEnvironment = FakeDynamicEnvironment()
       await(service.retrieve(loginInfo)) must beNone
     }
   }
@@ -57,6 +59,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
       val loginInfo = LoginInfo("test", "test")
       val authenticator = new FakeAuthenticator(loginInfo, "test")
       val dao = new FakeAuthenticatorRepository[FakeAuthenticator]()
+      implicit val dynamicEnvironment = FakeDynamicEnvironment()
 
       await(dao.add(authenticator))
 
@@ -65,6 +68,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
 
     "return None if no authenticator could be found for the given ID" in {
       val dao = new FakeAuthenticatorRepository[FakeAuthenticator]()
+      implicit val dynamicEnvironment = FakeDynamicEnvironment()
 
       await(dao.find("test")) must beNone
     }
@@ -105,23 +109,23 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
 
   "The `FakeAuthenticatorService` factory" should {
     "return a `SessionAuthenticatorService`" in {
-      FakeAuthenticatorService[SessionAuthenticator]() must beAnInstanceOf[SessionAuthenticatorService]
+      FakeAuthenticatorService[SessionAuthenticator, FakeDynamicEnvironment]() must beAnInstanceOf[SessionAuthenticatorService]
     }
 
     "return a `CookieAuthenticatorService`" in new WithApplication {
-      FakeAuthenticatorService[CookieAuthenticator]() must beAnInstanceOf[CookieAuthenticatorService]
+      FakeAuthenticatorService[CookieAuthenticator, FakeDynamicEnvironment]() must beAnInstanceOf[CookieAuthenticatorService]
     }
 
     "return a `BearerTokenAuthenticatorService`" in {
-      FakeAuthenticatorService[BearerTokenAuthenticator]() must beAnInstanceOf[BearerTokenAuthenticatorService]
+      FakeAuthenticatorService[BearerTokenAuthenticator, FakeDynamicEnvironment]() must beAnInstanceOf[BearerTokenAuthenticatorService]
     }
 
     "return a `JWTAuthenticatorService`" in {
-      FakeAuthenticatorService[JWTAuthenticator]() must beAnInstanceOf[JWTAuthenticatorService]
+      FakeAuthenticatorService[JWTAuthenticator, FakeDynamicEnvironment]() must beAnInstanceOf[JWTAuthenticatorService]
     }
 
     "return a `DummyAuthenticatorService`" in {
-      FakeAuthenticatorService[DummyAuthenticator]() must beAnInstanceOf[DummyAuthenticatorService]
+      FakeAuthenticatorService[DummyAuthenticator, FakeDynamicEnvironment]() must beAnInstanceOf[DummyAuthenticatorService]
     }
   }
 
@@ -129,7 +133,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     "return a `SessionAuthenticator`" in new WithApplication {
       val loginInfo = LoginInfo("test", "test")
       val identity = FakeIdentity(loginInfo)
-      implicit val env = FakeEnvironment[SessionEnv](Seq(loginInfo -> identity))
+      implicit val env = FakeEnvironment[SessionEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
       implicit val request = FakeRequest()
 
       FakeAuthenticator(loginInfo) must beAnInstanceOf[SessionAuthenticator]
@@ -138,7 +142,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     "return a `CookieAuthenticator`" in new WithApplication {
       val loginInfo = LoginInfo("test", "test")
       val identity = FakeIdentity(loginInfo)
-      implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+      implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
       implicit val request = FakeRequest()
 
       FakeAuthenticator(loginInfo) must beAnInstanceOf[CookieAuthenticator]
@@ -147,7 +151,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     "return a `BearerTokenAuthenticator`" in new WithApplication {
       val loginInfo = LoginInfo("test", "test")
       val identity = FakeIdentity(loginInfo)
-      implicit val env = FakeEnvironment[BearerTokenEnv](Seq(loginInfo -> identity))
+      implicit val env = FakeEnvironment[BearerTokenEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
       implicit val request = FakeRequest()
 
       FakeAuthenticator(loginInfo) must beAnInstanceOf[BearerTokenAuthenticator]
@@ -156,7 +160,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     "return a `JWTAuthenticator`" in new WithApplication {
       val loginInfo = LoginInfo("test", "test")
       val identity = FakeIdentity(loginInfo)
-      implicit val env = FakeEnvironment[JWTEnv](Seq(loginInfo -> identity))
+      implicit val env = FakeEnvironment[JWTEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
       implicit val request = FakeRequest()
 
       FakeAuthenticator(loginInfo) must beAnInstanceOf[JWTAuthenticator]
@@ -165,7 +169,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     "return a `DummyAuthenticator`" in new WithApplication {
       val loginInfo = LoginInfo("test", "test")
       val identity = FakeIdentity(loginInfo)
-      implicit val env = FakeEnvironment[DummyEnv](Seq(loginInfo -> identity))
+      implicit val env = FakeEnvironment[DummyEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
       implicit val request = FakeRequest()
 
       FakeAuthenticator(loginInfo) must beAnInstanceOf[DummyAuthenticator]
@@ -177,7 +181,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
       new WithApplication(app) {
         val loginInfo = LoginInfo("test", "test")
         val identity = FakeIdentity(loginInfo)
-        val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+        val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
         val request = FakeRequest()
 
         val controller = app.injector.instanceOf[SecuredController]
@@ -191,7 +195,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
       new WithApplication(app) {
         val loginInfo = LoginInfo("test", "test")
         val identity = FakeIdentity(loginInfo)
-        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
         val request = FakeRequest().withAuthenticator(LoginInfo("invalid", "invalid"))
 
         val controller = app.injector.instanceOf[SecuredController]
@@ -205,7 +209,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
       new WithApplication(app) {
         val loginInfo = LoginInfo("test", "test")
         val identity = FakeIdentity(loginInfo)
-        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
         val request = FakeRequest().withAuthenticator(loginInfo)
 
         val controller = app.injector.instanceOf[SecuredController]
@@ -222,7 +226,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
       new WithApplication(app) {
         val loginInfo = LoginInfo("test", "test")
         val identity = FakeIdentity(loginInfo)
-        val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+        val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
         val request = FakeRequest()
 
         val controller = app.injector.instanceOf[SecuredController]
@@ -236,7 +240,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
       new WithApplication(app) {
         val loginInfo = LoginInfo("test", "test")
         val identity = FakeIdentity(loginInfo)
-        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
         val request = FakeRequest().withAuthenticator(LoginInfo("invalid", "invalid"))
 
         val controller = app.injector.instanceOf[SecuredController]
@@ -251,7 +255,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
         val loginInfo = LoginInfo("test", "test")
         val identity = FakeIdentity(loginInfo)
 
-        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+        implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
         val request = FakeRequest().withAuthenticator(loginInfo)
 
         val controller = app.injector.instanceOf[SecuredController]
@@ -281,7 +285,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     /**
      * The Silhouette environment.
      */
-    implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity))
+    implicit val env = FakeEnvironment[CookieEnv](Seq(loginInfo -> identity), DummyDynamicEnvironment())
 
     /**
      * The guice application builder.
@@ -314,6 +318,7 @@ object FakesSpec {
   trait CookieEnv extends Env {
     type I = FakeIdentity
     type A = CookieAuthenticator
+    type D = DummyDynamicEnvironment
   }
 
   /**
@@ -322,6 +327,7 @@ object FakesSpec {
   trait SessionEnv extends Env {
     type I = FakeIdentity
     type A = SessionAuthenticator
+    type D = DummyDynamicEnvironment
   }
 
   /**
@@ -330,6 +336,7 @@ object FakesSpec {
   trait JWTEnv extends Env {
     type I = FakeIdentity
     type A = JWTAuthenticator
+    type D = DummyDynamicEnvironment
   }
 
   /**
@@ -338,6 +345,7 @@ object FakesSpec {
   trait BearerTokenEnv extends Env {
     type I = FakeIdentity
     type A = BearerTokenAuthenticator
+    type D = DummyDynamicEnvironment
   }
 
   /**
@@ -346,6 +354,7 @@ object FakesSpec {
   trait DummyEnv extends Env {
     type I = FakeIdentity
     type A = DummyAuthenticator
+    type D = DummyDynamicEnvironment
   }
 
   /**
