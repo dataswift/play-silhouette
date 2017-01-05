@@ -62,7 +62,7 @@ object Build extends Build {
       silhouetteCas,
       silhouetteCryptoJca,
       silhouettePasswordBcrypt,
-//      silhouettePersistence,
+      silhouettePersistence,
       silhouetteTestkit
     ),
     settings = Defaults.coreDefaultSettings ++

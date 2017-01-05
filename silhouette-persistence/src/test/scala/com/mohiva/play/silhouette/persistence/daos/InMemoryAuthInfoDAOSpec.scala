@@ -15,7 +15,7 @@
  */
 package com.mohiva.play.silhouette.persistence.daos
 
-import com.mohiva.play.silhouette.api.{ AuthInfo, LoginInfo }
+import com.mohiva.play.silhouette.api.{ AuthInfo, DummyDynamicEnvironment, LoginInfo }
 import com.mohiva.play.silhouette.test.WaitPatience
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.control.NoLanguageFeatures
@@ -33,18 +33,20 @@ class InMemoryAuthInfoDAOSpec(implicit ev: ExecutionEnv) extends Specification w
 
   "The `find` method" should {
     "find an OAuth1 info for the given login info" in new Context {
+      implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
       Await.result(dao.save(loginInfo, authInfo), 10 seconds)
-
       dao.find(loginInfo) must beSome(authInfo).awaitWithPatience
     }
 
     "return None if no OAuth1 info for the given login info exists" in new Context {
+      implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
       dao.find(loginInfo.copy(providerKey = "new.key")) should beNone.awaitWithPatience
     }
   }
 
   "The `add` method" should {
     "add a new OAuth1 info" in new Context {
+      implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
       dao.add(loginInfo.copy(providerKey = "new.key"), authInfo) must beEqualTo(authInfo).awaitWithPatience
       dao.find(loginInfo.copy(providerKey = "new.key")) must beSome(authInfo).awaitWithPatience
     }
@@ -52,6 +54,7 @@ class InMemoryAuthInfoDAOSpec(implicit ev: ExecutionEnv) extends Specification w
 
   "The `update` method" should {
     "update an existing OAuth1 info" in new Context {
+      implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
       val updatedInfo = authInfo.copy(data = "updated")
 
       dao.update(loginInfo, updatedInfo) must beEqualTo(updatedInfo).awaitWithPatience
@@ -61,11 +64,13 @@ class InMemoryAuthInfoDAOSpec(implicit ev: ExecutionEnv) extends Specification w
 
   "The `save` method" should {
     "insert a new OAuth1 info" in new Context {
+      implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
       dao.save(loginInfo.copy(providerKey = "new.key"), authInfo) must beEqualTo(authInfo).awaitWithPatience
       dao.find(loginInfo.copy(providerKey = "new.key")) must beSome(authInfo).awaitWithPatience
     }
 
     "update an existing OAuth1 info" in new Context {
+      implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
       val updatedInfo = authInfo.copy(data = "updated")
 
       dao.update(loginInfo, updatedInfo) must beEqualTo(updatedInfo).awaitWithPatience
@@ -75,6 +80,7 @@ class InMemoryAuthInfoDAOSpec(implicit ev: ExecutionEnv) extends Specification w
 
   "The `remove` method" should {
     "remove an OAuth1 info" in new Context {
+      implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
       Await.result(dao.remove(loginInfo), 10 seconds)
       dao.find(loginInfo) must beNone.awaitWithPatience
     }
@@ -93,7 +99,7 @@ class InMemoryAuthInfoDAOSpec(implicit ev: ExecutionEnv) extends Specification w
     /**
      * The OAuth1 info DAO implementation.
      */
-    lazy val dao = new InMemoryAuthInfoDAO[TestInfo] {}
+    lazy val dao = new InMemoryAuthInfoDAO[TestInfo, DummyDynamicEnvironment] {}
 
     /**
      * A login info.
