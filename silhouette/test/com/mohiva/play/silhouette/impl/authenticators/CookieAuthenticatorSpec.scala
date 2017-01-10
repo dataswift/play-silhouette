@@ -18,7 +18,7 @@ package com.mohiva.play.silhouette.impl.authenticators
 import java.util.regex.Pattern
 
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._
-import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.api.{ DummyDynamicEnvironment, LoginInfo }
 import com.mohiva.play.silhouette.api.actions.SecuredActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.crypto.{ Base64AuthenticatorEncoder, CookieSigner }
 import com.mohiva.play.silhouette.api.exceptions._
@@ -616,7 +616,7 @@ class CookieAuthenticatorSpec extends PlaySpecification with Mockito with NoLang
      * The authenticator service instance to test.
      */
     lazy val service = (repository: Option[AuthenticatorRepository[CookieAuthenticator]]) =>
-      new CookieAuthenticatorService(
+      new CookieAuthenticatorService[FakeDynamicEnvironment](
         settings,
         repository,
         cookieSigner,

@@ -113,7 +113,7 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
     }
 
     "return a `CookieAuthenticatorService`" in new WithApplication {
-      FakeAuthenticatorService[CookieAuthenticator, FakeDynamicEnvironment]() must beAnInstanceOf[CookieAuthenticatorService]
+      FakeAuthenticatorService[CookieAuthenticator, FakeDynamicEnvironment]() must beAnInstanceOf[CookieAuthenticatorService[FakeDynamicEnvironment]]
     }
 
     "return a `BearerTokenAuthenticatorService`" in {

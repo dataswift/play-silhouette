@@ -126,7 +126,7 @@ case class FakeSessionAuthenticatorService() extends SessionAuthenticatorService
 /**
  * A fake cookie authenticator service.
  */
-case class FakeCookieAuthenticatorService() extends CookieAuthenticatorService(
+case class FakeCookieAuthenticatorService[D <: DynamicEnvironment]() extends CookieAuthenticatorService[D](
   new CookieAuthenticatorSettings(),
   None,
   new CookieSigner {
@@ -176,7 +176,7 @@ object FakeAuthenticatorService {
   def apply[T <: Authenticator: TypeTag, D <: DynamicEnvironment](): AuthenticatorService[T, D] = {
     (typeOf[T] match {
       case t if t <:< typeOf[SessionAuthenticator]     => FakeSessionAuthenticatorService()
-      case t if t <:< typeOf[CookieAuthenticator]      => FakeCookieAuthenticatorService()
+      case t if t <:< typeOf[CookieAuthenticator]      => FakeCookieAuthenticatorService[D]()
       case t if t <:< typeOf[BearerTokenAuthenticator] => FakeBearerTokenAuthenticatorService()
       case t if t <:< typeOf[JWTAuthenticator]         => FakeJWTAuthenticatorService()
       case t if t <:< typeOf[DummyAuthenticator]       => FakeDummyAuthenticatorService()

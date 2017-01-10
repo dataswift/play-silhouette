@@ -87,7 +87,7 @@ class CredentialsProvider[D <: DynamicEnvironment] @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info created from the credentials.
    */
-  def loginInfo(credentials: Credentials)(implicit dyn: D): Future[LoginInfo] = Future.successful(LoginInfo(dyn.id, credentials.identifier))
+  def loginInfo(credentials: Credentials)(implicit dyn: D): Future[LoginInfo] = Future.successful(LoginInfo(id, credentials.identifier))
 }
 
 /**
