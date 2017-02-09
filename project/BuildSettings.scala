@@ -171,38 +171,38 @@ object APIDoc {
 ////*******************************
 //// Maven settings
 ////*******************************
-object Publish extends AutoPlugin {
+// object Publish extends AutoPlugin {
 
-  import xerial.sbt.Sonatype._
+//   import xerial.sbt.Sonatype._
 
-  override def trigger = allRequirements
+//   override def trigger = allRequirements
 
-  private val pom = {
-    <scm>
-      <url>git@github.com:mohiva/play-silhouette.git</url>
-      <connection>scm:git:git@github.com:mohiva/play-silhouette.git</connection>
-    </scm>
-      <developers>
-        <developer>
-          <id>akkie</id>
-          <name>Christian Kaps</name>
-          <url>http://mohiva.com</url>
-        </developer>
-        <developer>
-          <id>fernandoacorreia</id>
-          <name>Fernando Correia</name>
-          <url>http://www.fernandocorreia.info/</url>
-        </developer>
-      </developers>
-  }
+//   private val pom = {
+//     <scm>
+//       <url>git@github.com:mohiva/play-silhouette.git</url>
+//       <connection>scm:git:git@github.com:mohiva/play-silhouette.git</connection>
+//     </scm>
+//       <developers>
+//         <developer>
+//           <id>akkie</id>
+//           <name>Christian Kaps</name>
+//           <url>http://mohiva.com</url>
+//         </developer>
+//         <developer>
+//           <id>fernandoacorreia</id>
+//           <name>Fernando Correia</name>
+//           <url>http://www.fernandocorreia.info/</url>
+//         </developer>
+//       </developers>
+//   }
 
-  override def projectSettings = sonatypeSettings ++ Seq(
-    description := "Authentication library for Play Framework applications that supports several authentication methods, including OAuth1, OAuth2, OpenID, CAS, Credentials, Basic Authentication, Two Factor Authentication or custom authentication schemes",
-    homepage := Some(url("http://www.silhouette.rocks/")),
-    licenses := Seq("Apache License" -> url("https://github.com/mohiva/play-silhouette/blob/master/LICENSE")),
-    publishMavenStyle := true,
-    publishArtifact in Test := false,
-    pomIncludeRepository := { _ => false },
-    pomExtra := pom
-  )
-}
+//   override def projectSettings = sonatypeSettings ++ Seq(
+//     description := "Authentication library for Play Framework applications that supports several authentication methods, including OAuth1, OAuth2, OpenID, CAS, Credentials, Basic Authentication, Two Factor Authentication or custom authentication schemes",
+//     homepage := Some(url("http://www.silhouette.rocks/")),
+//     licenses := Seq("Apache License" -> url("https://github.com/mohiva/play-silhouette/blob/master/LICENSE")),
+//     publishMavenStyle := true,
+//     publishArtifact in Test := false,
+//     pomIncludeRepository := { _ => false },
+//     pomExtra := pom
+//   )
+// }
