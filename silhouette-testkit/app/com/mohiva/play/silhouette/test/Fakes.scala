@@ -17,17 +17,17 @@ package com.mohiva.play.silhouette.test
 
 import java.util.UUID
 
-import com.mohiva.play.silhouette.api.{ DynamicEnvironment, _ }
-import com.mohiva.play.silhouette.api.crypto.{ Base64AuthenticatorEncoder, CookieSigner }
+import com.mohiva.play.silhouette.api._
+import com.mohiva.play.silhouette.api.crypto.{ Base64AuthenticatorEncoder, Signer }
 import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
 import com.mohiva.play.silhouette.api.services.{ AuthenticatorService, DynamicEnvironmentProviderService, IdentityService }
 import com.mohiva.play.silhouette.api.util.Clock
 import com.mohiva.play.silhouette.impl.authenticators._
 import com.mohiva.play.silhouette.impl.util.{ DefaultFingerprintGenerator, SecureRandomIDGenerator }
-import play.api.libs.concurrent.Execution.Implicits._
-import play.api.mvc.{ Request, RequestHeader }
+import play.api.mvc.{ DefaultCookieHeaderEncoding, DefaultSessionCookieBaker, Request, RequestHeader }
 
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.runtime.universe._
 import scala.util.Success
@@ -118,9 +118,10 @@ class FakeAuthenticatorRepository[T <: StorableAuthenticator] extends Authentica
  * A fake session authenticator service.
  */
 case class FakeSessionAuthenticatorService() extends SessionAuthenticatorService(
-  new SessionAuthenticatorSettings(),
+  SessionAuthenticatorSettings(),
   new DefaultFingerprintGenerator(),
   new Base64AuthenticatorEncoder,
+  new DefaultSessionCookieBaker(),
   Clock())
 
 /**
@@ -129,10 +130,11 @@ case class FakeSessionAuthenticatorService() extends SessionAuthenticatorService
 case class FakeCookieAuthenticatorService[D <: DynamicEnvironment]() extends CookieAuthenticatorService[D](
   new CookieAuthenticatorSettings(),
   None,
-  new CookieSigner {
+  new Signer {
     def sign(data: String) = data
     def extract(message: String) = Success(message)
   },
+  new DefaultCookieHeaderEncoding(),
   new Base64AuthenticatorEncoder,
   new DefaultFingerprintGenerator(),
   new SecureRandomIDGenerator(),
@@ -142,7 +144,7 @@ case class FakeCookieAuthenticatorService[D <: DynamicEnvironment]() extends Coo
  * A fake bearer token authenticator service.
  */
 case class FakeBearerTokenAuthenticatorService() extends BearerTokenAuthenticatorService(
-  new BearerTokenAuthenticatorSettings(),
+  BearerTokenAuthenticatorSettings(),
   new FakeAuthenticatorRepository[BearerTokenAuthenticator],
   new SecureRandomIDGenerator(),
   Clock())
@@ -151,7 +153,7 @@ case class FakeBearerTokenAuthenticatorService() extends BearerTokenAuthenticato
  * A fake JWT authenticator service.
  */
 case class FakeJWTAuthenticatorService() extends JWTAuthenticatorService(
-  new JWTAuthenticatorSettings(sharedSecret = UUID.randomUUID().toString),
+  JWTAuthenticatorSettings(sharedSecret = UUID.randomUUID().toString),
   None,
   new Base64AuthenticatorEncoder,
   new SecureRandomIDGenerator(),
@@ -252,10 +254,12 @@ case class FakeEnvironment[E <: Env](
   identities: Seq[(LoginInfo, E#I)],
   dynamicEnvironment: E#D,
   requestProviders: Seq[RequestProvider[E#D]] = Seq(),
-  eventBus: EventBus = EventBus())(
+  eventBus: EventBus = EventBus()
+)(
   implicit
-  val executionContext: ExecutionContext, tt: TypeTag[E#A])
-  extends Environment[E] {
+  val executionContext: ExecutionContext,
+  tt: TypeTag[E#A]
+) extends Environment[E] {
 
   /**
    * The identity service implementation.

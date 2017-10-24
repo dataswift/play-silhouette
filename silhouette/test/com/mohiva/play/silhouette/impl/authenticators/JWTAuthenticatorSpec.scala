@@ -32,11 +32,11 @@ import org.specs2.control.NoLanguageFeatures
 import org.specs2.matcher.JsonMatchers
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{ JsNull, Json }
 import play.api.mvc.Results
 import play.api.test.{ FakeRequest, PlaySpecification, WithApplication }
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -389,6 +389,14 @@ class JWTAuthenticatorSpec extends PlaySpecification with Mockito with JsonMatch
 
       unserialize(request.headers.get(settings.fieldName).get, authenticatorEncoder, settings).get must be equalTo authenticator
       request.headers.get("test") should beSome("test")
+    }
+
+    "keep other request parts" in new WithApplication with Context {
+      val token = serialize(authenticator, authenticatorEncoder, settings)
+      val request = service(Some(repository)).embed(token, FakeRequest().withSession("test" -> "test"))
+
+      unserialize(request.headers.get(settings.fieldName).get, authenticatorEncoder, settings).get must be equalTo authenticator
+      request.session.get("test") should beSome("test")
     }
   }
 

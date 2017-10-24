@@ -22,10 +22,10 @@ package com.mohiva.play.silhouette.impl.providers
 
 import javax.inject.Inject
 
-import com.mohiva.play.silhouette.api.{ LoginInfo, _ }
 import com.mohiva.play.silhouette.api.exceptions.ConfigurationException
-import com.mohiva.play.silhouette.api.repositories.{ AuthInfoRepository }
-import com.mohiva.play.silhouette.api.util.{ Credentials, PasswordHasherRegistry, _ }
+import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
+import com.mohiva.play.silhouette.api.util.{ Credentials, PasswordHasherRegistry }
+import com.mohiva.play.silhouette.api.{ LoginInfo, _ }
 import com.mohiva.play.silhouette.impl.exceptions.{ IdentityNotFoundException, InvalidPasswordException }
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider._
 
@@ -87,7 +87,7 @@ class CredentialsProvider[D <: DynamicEnvironment] @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info created from the credentials.
    */
-  def loginInfo(credentials: Credentials)(implicit dyn: D): Future[LoginInfo] = Future.successful(LoginInfo(id, credentials.identifier))
+  def loginInfo(credentials: Credentials): Future[LoginInfo] = Future.successful(LoginInfo(id, credentials.identifier))
 }
 
 /**

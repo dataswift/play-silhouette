@@ -27,10 +27,10 @@ import org.joda.time.DateTime
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Results
 import play.api.test.{ FakeRequest, PlaySpecification, WithApplication }
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -214,6 +214,14 @@ class BearerTokenAuthenticatorSpec extends PlaySpecification with Mockito with N
 
       request.headers.get(settings.fieldName) should beSome(authenticator.id)
       request.headers.get("test") should beSome("test")
+    }
+
+    "keep other request parts" in new Context {
+      val value = authenticator.id
+      val request = service.embed(value, FakeRequest().withSession("test" -> "test"))
+
+      request.headers.get(settings.fieldName) should beSome(authenticator.id)
+      request.session.get("test") should beSome("test")
     }
   }
 

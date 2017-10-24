@@ -55,7 +55,7 @@ trait BaseDropboxProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpLayer.url(urls("api")).withHeaders(AUTHORIZATION -> s"Bearer ${authInfo.accessToken}").get().flatMap { response =>
+    httpLayer.url(urls("api")).withHttpHeaders(AUTHORIZATION -> s"Bearer ${authInfo.accessToken}").get().flatMap { response =>
       val json = response.json
       response.status match {
         case 200 => profileParser.parse(json, authInfo)
@@ -97,12 +97,12 @@ class DropboxProfileParser extends SocialProfileParser[JsValue, CommonSocialProf
  * The Dropbox OAuth2 Provider.
  *
  * @param httpLayer     The HTTP layer implementation.
- * @param stateProvider The state provider implementation.
+ * @param stateHandler  The state provider implementation.
  * @param settings      The provider settings.
  */
 class DropboxProvider(
   protected val httpLayer: HTTPLayer,
-  protected val stateProvider: OAuth2StateProvider,
+  protected val stateHandler: SocialStateHandler,
   val settings: OAuth2Settings)
   extends BaseDropboxProvider with CommonSocialProfileBuilder {
 
@@ -122,7 +122,7 @@ class DropboxProvider(
    * @param f A function which gets the settings passed and returns different settings.
    * @return An instance of the provider initialized with new settings.
    */
-  override def withSettings(f: (Settings) => Settings) = new DropboxProvider(httpLayer, stateProvider, f(settings))
+  override def withSettings(f: (Settings) => Settings) = new DropboxProvider(httpLayer, stateHandler, f(settings))
 }
 
 /**

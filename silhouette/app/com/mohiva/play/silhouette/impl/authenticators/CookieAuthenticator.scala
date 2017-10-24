@@ -21,22 +21,20 @@ package com.mohiva.play.silhouette.impl.authenticators
 
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._
 import com.mohiva.play.silhouette.api._
-import com.mohiva.play.silhouette.api.crypto.{ CookieSigner, AuthenticatorEncoder }
+import com.mohiva.play.silhouette.api.crypto.{ AuthenticatorEncoder, Signer }
 import com.mohiva.play.silhouette.api.exceptions._
 import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
 import com.mohiva.play.silhouette.api.services.AuthenticatorService._
 import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService }
-import com.mohiva.play.silhouette.api.util.JsonFormats._
 import com.mohiva.play.silhouette.api.util._
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticatorService._
 import org.joda.time.DateTime
-import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.mvc._
+import play.api.mvc.request.{ Cell, RequestAttrKey }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.language.postfixOps
 import scala.util.{ Failure, Success, Try }
 
 /**
@@ -56,13 +54,13 @@ import scala.util.{ Failure, Success, Try }
  *
  * Note: If deploying to multiple nodes the backing store will need to synchronize.
  *
- * @param id The authenticator ID.
- * @param loginInfo The linked login info for an identity.
- * @param lastUsedDateTime The last used date/time.
+ * @param id                 The authenticator ID.
+ * @param loginInfo          The linked login info for an identity.
+ * @param lastUsedDateTime   The last used date/time.
  * @param expirationDateTime The expiration date/time.
- * @param idleTimeout The duration an authenticator can be idle before it timed out.
- * @param cookieMaxAge The duration a cookie expires. `None` for a transient cookie.
- * @param fingerprint Maybe a fingerprint of the user.
+ * @param idleTimeout        The duration an authenticator can be idle before it timed out.
+ * @param cookieMaxAge       The duration a cookie expires. `None` for a transient cookie.
+ * @param fingerprint        Maybe a fingerprint of the user.
  */
 case class CookieAuthenticator(
   id: String,
@@ -71,8 +69,8 @@ case class CookieAuthenticator(
   expirationDateTime: DateTime,
   idleTimeout: Option[FiniteDuration],
   cookieMaxAge: Option[FiniteDuration],
-  fingerprint: Option[String])
-  extends StorableAuthenticator with ExpirableAuthenticator {
+  fingerprint: Option[String]
+) extends StorableAuthenticator with ExpirableAuthenticator {
 
   /**
    * The Type of the generated value an authenticator will be serialized to.
@@ -84,6 +82,9 @@ case class CookieAuthenticator(
  * The companion object of the authenticator.
  */
 object CookieAuthenticator extends Logger {
+  import com.mohiva.play.silhouette.api.util.JsonFormats._
+  import play.api.libs.json.JodaReads._
+  import play.api.libs.json.JodaWrites._
 
   /**
    * Converts the CookieAuthenticator to Json and vice versa.
@@ -93,33 +94,33 @@ object CookieAuthenticator extends Logger {
   /**
    * Serializes the authenticator.
    *
-   * @param authenticator The authenticator to serialize.
-   * @param cookieSigner The cookie signer.
+   * @param authenticator        The authenticator to serialize.
+   * @param signer               The signer implementation.
    * @param authenticatorEncoder The authenticator encoder.
    * @return The serialized authenticator.
    */
   def serialize(
     authenticator: CookieAuthenticator,
-    cookieSigner: CookieSigner,
+    signer: Signer,
     authenticatorEncoder: AuthenticatorEncoder) = {
 
-    cookieSigner.sign(authenticatorEncoder.encode(Json.toJson(authenticator).toString()))
+    signer.sign(authenticatorEncoder.encode(Json.toJson(authenticator).toString()))
   }
 
   /**
    * Unserializes the authenticator.
    *
-   * @param str The string representation of the authenticator.
-   * @param cookieSigner The cookie signer.
+   * @param str                  The string representation of the authenticator.
+   * @param signer               The signer implementation.
    * @param authenticatorEncoder The authenticator encoder.
    * @return Some authenticator on success, otherwise None.
    */
   def unserialize(
     str: String,
-    cookieSigner: CookieSigner,
+    signer: Signer,
     authenticatorEncoder: AuthenticatorEncoder): Try[CookieAuthenticator] = {
 
-    cookieSigner.extract(str) match {
+    signer.extract(str) match {
       case Success(data) => buildAuthenticator(authenticatorEncoder.decode(data))
       case Failure(e)    => Failure(new AuthenticatorException(InvalidCookieSignature.format(ID), e))
     }
@@ -145,25 +146,29 @@ object CookieAuthenticator extends Logger {
 /**
  * The service that handles the cookie authenticator.
  *
- * @param settings The cookie settings.
- * @param repository The repository to persist the authenticator. Set it to None to use a stateless approach.
- * @param cookieSigner The cookie signer.
+ * @param settings             The cookie settings.
+ * @param repository           The repository to persist the authenticator. Set it to None to use a stateless approach.
+ * @param signer               The signer implementation.
+ * @param cookieHeaderEncoding Logic for encoding and decoding `Cookie` and `Set-Cookie` headers.
  * @param authenticatorEncoder The authenticator encoder.
  * @param fingerprintGenerator The fingerprint generator implementation.
- * @param idGenerator The ID generator used to create the authenticator ID.
- * @param clock The clock implementation.
- * @param executionContext The execution context to handle the asynchronous operations.
+ * @param idGenerator          The ID generator used to create the authenticator ID.
+ * @param clock                The clock implementation.
+ * @param executionContext     The execution context to handle the asynchronous operations.
  */
 class CookieAuthenticatorService[D <: DynamicEnvironment](
   settings: CookieAuthenticatorSettings,
   repository: Option[AuthenticatorRepository[CookieAuthenticator]],
-  cookieSigner: CookieSigner,
+  signer: Signer,
+  cookieHeaderEncoding: CookieHeaderEncoding,
   authenticatorEncoder: AuthenticatorEncoder,
   fingerprintGenerator: FingerprintGenerator,
   idGenerator: IDGenerator,
-  clock: Clock)(implicit val executionContext: ExecutionContext)
-  extends AuthenticatorService[CookieAuthenticator, D]
-  with Logger {
+  clock: Clock
+)(
+  implicit
+  val executionContext: ExecutionContext)
+  extends AuthenticatorService[CookieAuthenticator, D] with Logger {
 
   import CookieAuthenticator._
 
@@ -171,7 +176,7 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
    * Creates a new authenticator for the specified login info.
    *
    * @param loginInfo The login info for which the authenticator should be created.
-   * @param request The request header.
+   * @param request   The request header.
    * @return An authenticator.
    */
   override def create(loginInfo: LoginInfo)(implicit request: RequestHeader): Future[CookieAuthenticator] = {
@@ -206,7 +211,7 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
         case Some(cookie) =>
           (repository match {
             case Some(d) => d.find(cookie.value)
-            case None => unserialize(cookie.value, cookieSigner, authenticatorEncoder) match {
+            case None => unserialize(cookie.value, signer, authenticatorEncoder) match {
               case Success(authenticator) => Future.successful(Some(authenticator))
               case Failure(error) =>
                 logger.info(error.getMessage, error)
@@ -232,13 +237,13 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
    * stored in the backing store.
    *
    * @param authenticator The authenticator instance.
-   * @param request The request header.
+   * @param request       The request header.
    * @return The serialized authenticator value.
    */
   override def init(authenticator: CookieAuthenticator)(implicit request: RequestHeader, dyn: D): Future[Cookie] = {
     (repository match {
       case Some(d) => d.add(authenticator).map(_.id)
-      case None    => Future.successful(serialize(authenticator, cookieSigner, authenticatorEncoder))
+      case None    => Future.successful(serialize(authenticator, signer, authenticatorEncoder))
     }).map { value =>
       Cookie(
         name = settings.cookieName,
@@ -259,8 +264,8 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
   /**
    * Embeds the cookie into the result.
    *
-   * @param cookie The cookie to embed.
-   * @param result The result to manipulate.
+   * @param cookie  The cookie to embed.
+   * @param result  The result to manipulate.
    * @param request The request header.
    * @return The manipulated result.
    */
@@ -271,18 +276,21 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
   /**
    * Embeds the cookie into the request.
    *
-   * @param cookie The cookie to embed.
+   * @param cookie  The cookie to embed.
    * @param request The request header.
    * @return The manipulated request header.
    */
   override def embed(cookie: Cookie, request: RequestHeader): RequestHeader = {
-    val cookies = Cookies.mergeCookieHeader(request.headers.get(HeaderNames.COOKIE).getOrElse(""), Seq(cookie))
-    val additional = Seq(HeaderNames.COOKIE -> cookies)
-    request.copy(headers = request.headers.replace(additional: _*))
+    val filteredCookies = request.cookies.filter(_.name != cookie.name).toSeq
+    val combinedCookies = filteredCookies :+ cookie
+    val cookies = Cookies(combinedCookies)
+
+    request.withAttrs(request.attrs + RequestAttrKey.Cookies.bindValue(Cell(cookies)))
   }
 
   /**
    * @inheritdoc
+   *
    * @param authenticator The authenticator to touch.
    * @return The touched authenticator on the left or the untouched authenticator on the right.
    */
@@ -302,8 +310,8 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
    * authenticator in the backing store will be changed.
    *
    * @param authenticator The authenticator to update.
-   * @param result The result to manipulate.
-   * @param request The request header.
+   * @param result        The result to manipulate.
+   * @param request       The request header.
    * @return The original or a manipulated result.
    */
   override def update(authenticator: CookieAuthenticator, result: Result)(
@@ -314,7 +322,7 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
       case Some(d) => d.update(authenticator).map(_ => AuthenticatorResult(result))
       case None => Future.successful(AuthenticatorResult(result.withCookies(Cookie(
         name = settings.cookieName,
-        value = serialize(authenticator, cookieSigner, authenticatorEncoder),
+        value = serialize(authenticator, signer, authenticatorEncoder),
         // The maxAge` must be used from the authenticator, because it might be changed by the user
         // to implement "Remember Me" functionality
         maxAge = authenticator.cookieMaxAge.map(_.toSeconds.toInt),
@@ -336,7 +344,7 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
    * or use the other renew method otherwise.
    *
    * @param authenticator The authenticator to renew.
-   * @param request The request header.
+   * @param request       The request header.
    * @return The serialized expression of the authenticator.
    */
   override def renew(authenticator: CookieAuthenticator)(implicit request: RequestHeader, dyn: D): Future[Cookie] = {
@@ -357,8 +365,8 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
    * store. After that it isn't possible to use a cookie which was bound to this authenticator.
    *
    * @param authenticator The authenticator to update.
-   * @param result The result to manipulate.
-   * @param request The request header.
+   * @param result        The result to manipulate.
+   * @param request       The request header.
    * @return The original or a manipulated result.
    */
   override def renew(authenticator: CookieAuthenticator, result: Result)(
@@ -375,7 +383,7 @@ class CookieAuthenticatorService[D <: DynamicEnvironment](
    *
    * If the stateful approach will be used then the authenticator will also be removed from backing store.
    *
-   * @param result The result to manipulate.
+   * @param result  The result to manipulate.
    * @param request The request header.
    * @return The manipulated result.
    */
@@ -420,15 +428,15 @@ object CookieAuthenticatorService {
 /**
  * The settings for the cookie authenticator.
  *
- * @param cookieName The cookie name.
- * @param cookiePath The cookie path.
- * @param cookieDomain The cookie domain.
- * @param secureCookie Whether this cookie is secured, sent only for HTTPS requests.
- * @param httpOnlyCookie Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
- * @param useFingerprinting Indicates if a fingerprint of the user should be stored in the authenticator.
- * @param cookieMaxAge The duration a cookie expires. `None` for a transient cookie.
+ * @param cookieName               The cookie name.
+ * @param cookiePath               The cookie path.
+ * @param cookieDomain             The cookie domain.
+ * @param secureCookie             Whether this cookie is secured, sent only for HTTPS requests.
+ * @param httpOnlyCookie           Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
+ * @param useFingerprinting        Indicates if a fingerprint of the user should be stored in the authenticator.
+ * @param cookieMaxAge             The duration a cookie expires. `None` for a transient cookie.
  * @param authenticatorIdleTimeout The duration an authenticator can be idle before it timed out.
- * @param authenticatorExpiry The duration an authenticator expires after it was created.
+ * @param authenticatorExpiry      The duration an authenticator expires after it was created.
  */
 case class CookieAuthenticatorSettings(
   cookieName: String = "id",
@@ -439,4 +447,5 @@ case class CookieAuthenticatorSettings(
   useFingerprinting: Boolean = true,
   cookieMaxAge: Option[FiniteDuration] = None,
   authenticatorIdleTimeout: Option[FiniteDuration] = None,
-  authenticatorExpiry: FiniteDuration = 12 hours)
+  authenticatorExpiry: FiniteDuration = 12 hours
+)
