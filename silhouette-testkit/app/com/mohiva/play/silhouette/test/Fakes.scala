@@ -158,6 +158,16 @@ case class FakeJWTAuthenticatorService() extends JWTAuthenticatorService(
   Clock())
 
 /**
+ * A fake JWT RS256 authenticator service.
+ */
+case class FakeJWTRS256AuthenticatorService() extends JWTRS256AuthenticatorService(
+  new JWTRS256AuthenticatorSettings(),
+  None,
+  new Base64AuthenticatorEncoder,
+  new SecureRandomIDGenerator(),
+  Clock())
+
+/**
  * A fake Dummy authenticator service.
  */
 case class FakeDummyAuthenticatorService() extends DummyAuthenticatorService
@@ -179,6 +189,7 @@ object FakeAuthenticatorService {
       case t if t <:< typeOf[CookieAuthenticator]      => FakeCookieAuthenticatorService[D]()
       case t if t <:< typeOf[BearerTokenAuthenticator] => FakeBearerTokenAuthenticatorService()
       case t if t <:< typeOf[JWTAuthenticator]         => FakeJWTAuthenticatorService()
+      case t if t <:< typeOf[JWTRS256Authenticator]    => FakeJWTRS256AuthenticatorService()
       case t if t <:< typeOf[DummyAuthenticator]       => FakeDummyAuthenticatorService()
     }).asInstanceOf[AuthenticatorService[T, D]]
   }
