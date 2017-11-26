@@ -57,7 +57,6 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
       val loginInfo = LoginInfo("test", "test")
       val authenticator = new FakeAuthenticator(loginInfo, "test")
       val dao = new FakeAuthenticatorRepository[FakeAuthenticator]()
-      implicit val dynamicEnvironment = FakeDynamicEnvironment()
 
       await(dao.add(authenticator))
 
@@ -66,7 +65,6 @@ class FakesSpec extends PlaySpecification with JsonMatchers {
 
     "return None if no authenticator could be found for the given ID" in {
       val dao = new FakeAuthenticatorRepository[FakeAuthenticator]()
-      implicit val dynamicEnvironment = FakeDynamicEnvironment()
 
       await(dao.find("test")) must beNone
     }

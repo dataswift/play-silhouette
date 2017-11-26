@@ -844,7 +844,6 @@ object SecuredActionSpec {
      * @return The result to send to the client.
      */
     def discardAction = silhouette.SecuredAction.async { implicit request =>
-      implicit val dyn = request.dynamicEnvironment
       silhouette.env.authenticatorService.discard(request.authenticator, Ok("discarded"))
     }
 

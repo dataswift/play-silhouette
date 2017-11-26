@@ -18,7 +18,7 @@ package com.mohiva.play.silhouette.impl.authenticators
 import java.util.regex.Pattern
 
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._
-import com.mohiva.play.silhouette.api.{ DummyDynamicEnvironment, LoginInfo }
+import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.actions.SecuredActionSpec.FakeDynamicEnvironment
 import com.mohiva.play.silhouette.api.crypto.{ Base64AuthenticatorEncoder, Signer }
 import com.mohiva.play.silhouette.api.exceptions._
