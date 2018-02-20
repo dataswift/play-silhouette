@@ -43,7 +43,7 @@ class CredentialsProviderSpec extends PasswordProviderSpec {
       }
     }
 
-    "throw InvalidPasswordException if passwords does not match" in new WithApplication with Context {
+    "throw InvalidPasswordException if password does not match" in new WithApplication with Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       implicit val dyn = FakeDynamicEnvironment()
       val loginInfo = LoginInfo(dyn.id, credentials.identifier)

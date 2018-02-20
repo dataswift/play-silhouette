@@ -143,7 +143,7 @@ object JWTRS256Authenticator {
     }.flatMap { c =>
       val subject = authenticatorEncoder.decode(c.getSubject)
       buildLoginInfo(subject).map { loginInfo =>
-        val filteredClaims = c.getAllClaims.asScala.filterNot { case (k, v) => ReservedClaims.contains(k) || v == null }
+        val filteredClaims = c.getClaims.asScala.filterNot { case (k, v) => ReservedClaims.contains(k) || v == null }
         val customClaims = unserializeCustomClaims(filteredClaims.asJava)
         JWTRS256Authenticator(
           id = c.getJWTID,
