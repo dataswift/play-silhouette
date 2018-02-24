@@ -29,7 +29,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @tparam I The type of the identity.
  * @tparam A The type of the authenticator.
  */
-trait Authorization[I <: Identity, A <: Authenticator] {
+trait Authorization[I <: Identity, A <: Authenticator, D <: DynamicEnvironment] {
 
   /**
    * Checks whether the user is authorized to execute an endpoint or not.
@@ -40,7 +40,7 @@ trait Authorization[I <: Identity, A <: Authenticator] {
    * @tparam B The type of the request body.
    * @return True if the user is authorized, false otherwise.
    */
-  def isAuthorized[B](identity: I, authenticator: A)(implicit request: Request[B]): Future[Boolean]
+  def isAuthorized[B](identity: I, authenticator: A, dynamicEnvironment: D)(implicit request: Request[B]): Future[Boolean]
 }
 
 /**
@@ -54,7 +54,7 @@ object Authorization {
    * @param self The `Authorization` instance on which the additional methods should be defined.
    * @param ec The execution context to handle the asynchronous operations.
    */
-  implicit final class RichAuthorization[I <: Identity, A <: Authenticator](self: Authorization[I, A])(
+  implicit final class RichAuthorization[I <: Identity, A <: Authenticator, D <: DynamicEnvironment](self: Authorization[I, A, D])(
     implicit
     ec: ExecutionContext) {
 
@@ -63,12 +63,12 @@ object Authorization {
      *
      * @return An `Authorization` which performs a logical negation on an `Authorization` result.
      */
-    def unary_! : Authorization[I, A] = new Authorization[I, A] {
-      def isAuthorized[B](identity: I, authenticator: A)(
+    def unary_! : Authorization[I, A, D] = new Authorization[I, A, D] {
+      def isAuthorized[B](identity: I, authenticator: A, dynamicEnvironment: D)(
         implicit
         request: Request[B]): Future[Boolean] = {
 
-        self.isAuthorized(identity, authenticator).map(x => !x)
+        self.isAuthorized(identity, authenticator, dynamicEnvironment).map(x => !x)
       }
     }
 
@@ -78,13 +78,13 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical AND operation with two `Authorization` instances.
      */
-    def &&(authorization: Authorization[I, A]): Authorization[I, A] = new Authorization[I, A] {
-      def isAuthorized[B](identity: I, authenticator: A)(
+    def &&(authorization: Authorization[I, A, D]): Authorization[I, A, D] = new Authorization[I, A, D] {
+      def isAuthorized[B](identity: I, authenticator: A, dynamicEnvironment: D)(
         implicit
         request: Request[B]): Future[Boolean] = {
 
-        val leftF = self.isAuthorized(identity, authenticator)
-        val rightF = authorization.isAuthorized(identity, authenticator)
+        val leftF = self.isAuthorized(identity, authenticator, dynamicEnvironment)
+        val rightF = authorization.isAuthorized(identity, authenticator, dynamicEnvironment)
         for {
           left <- leftF
           right <- rightF
@@ -98,13 +98,13 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical OR operation with two `Authorization` instances.
      */
-    def ||(authorization: Authorization[I, A]): Authorization[I, A] = new Authorization[I, A] {
-      def isAuthorized[B](identity: I, authenticator: A)(
+    def ||(authorization: Authorization[I, A, D]): Authorization[I, A, D] = new Authorization[I, A, D] {
+      def isAuthorized[B](identity: I, authenticator: A, dynamicEnvironment: D)(
         implicit
         request: Request[B]): Future[Boolean] = {
 
-        val leftF = self.isAuthorized(identity, authenticator)
-        val rightF = authorization.isAuthorized(identity, authenticator)
+        val leftF = self.isAuthorized(identity, authenticator, dynamicEnvironment)
+        val rightF = authorization.isAuthorized(identity, authenticator, dynamicEnvironment)
         for {
           left <- leftF
           right <- rightF

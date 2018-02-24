@@ -159,7 +159,7 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         }
         env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
 
-        authorization.isAuthorized(any, any)(any) returns Future.successful(false)
+        authorization.isAuthorized(any, any, any)(any) returns Future.successful(false)
 
         withEvent[NotAuthorizedEvent[FakeIdentity]] {
           val result = controller.actionWithAuthorization(request)
@@ -182,7 +182,7 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         }
         env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
 
-        authorization.isAuthorized(any, any)(any) returns Future.successful(false)
+        authorization.isAuthorized(any, any, any)(any) returns Future.successful(false)
 
         val result = controller.actionWithAuthorizationAndErrorHandler(request)
 
@@ -203,7 +203,7 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         }
         env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
 
-        authorization.isAuthorized(any, any)(any) returns Future.successful(false)
+        authorization.isAuthorized(any, any, any)(any) returns Future.successful(false)
 
         val result = controller.actionWithAuthorization(request)
 
@@ -552,8 +552,8 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
      * An authorization mock.
      */
     lazy val authorization = {
-      val a = mock[Authorization[SecuredEnv#I, SecuredEnv#A]]
-      a.isAuthorized(any, any)(any) returns Future.successful(true)
+      val a = mock[Authorization[SecuredEnv#I, SecuredEnv#A, SecuredEnv#D]]
+      a.isAuthorized(any, any, any)(any) returns Future.successful(true)
       a
     }
 
@@ -571,7 +571,7 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
     class GuiceModule extends ScalaModule {
       def configure(): Unit = {
         bind[Environment[SecuredEnv]].toInstance(env)
-        bind[Authorization[SecuredEnv#I, SecuredEnv#A]].toInstance(authorization)
+        bind[Authorization[SecuredEnv#I, SecuredEnv#A, SecuredEnv#D]].toInstance(authorization)
         bind[Silhouette[SecuredEnv]].to[SilhouetteProvider[SecuredEnv]]
         bind[SecuredController]
       }
@@ -721,7 +721,7 @@ object SecuredActionSpec {
    *
    * @param isAuthorized True if the access is authorized, false otherwise.
    */
-  case class SimpleAuthorization(isAuthorized: Boolean = true) extends Authorization[FakeIdentity, FakeAuthenticator] {
+  case class SimpleAuthorization(isAuthorized: Boolean = true) extends Authorization[FakeIdentity, FakeAuthenticator, FakeDynamicEnvironment] {
 
     /**
      * Checks whether the user is authorized to execute an action or not.
@@ -732,7 +732,7 @@ object SecuredActionSpec {
      * @tparam B The type of the request body.
      * @return True if the user is authorized, false otherwise.
      */
-    def isAuthorized[B](identity: FakeIdentity, authenticator: FakeAuthenticator)(
+    def isAuthorized[B](identity: FakeIdentity, authenticator: FakeAuthenticator, dynamicEnvironment: FakeDynamicEnvironment)(
       implicit
       request: Request[B]): Future[Boolean] = {
 
@@ -779,7 +779,7 @@ object SecuredActionSpec {
    */
   class SecuredController @Inject() (
     silhouette: Silhouette[SecuredEnv],
-    authorization: Authorization[FakeIdentity, FakeAuthenticator],
+    authorization: Authorization[FakeIdentity, FakeAuthenticator, FakeDynamicEnvironment],
     components: ControllerComponents
   ) extends AbstractController(components) {
 

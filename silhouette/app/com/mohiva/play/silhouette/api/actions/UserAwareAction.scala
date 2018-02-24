@@ -64,10 +64,10 @@ case class UserAwareRequestHandlerBuilder[E <: Env](environment: Environment[E])
         implicit val dyn = dynamicEnvironment
         handleAuthentication.flatMap {
           // A valid authenticator was found and the identity may be exists
-          case (Some(authenticator), identity) if authenticator.extract.isValid =>
+          case (Some(authenticator), identity, _) if authenticator.extract.isValid =>
             handleBlock(authenticator, a => block(UserAwareRequest(identity, Some(a), dyn, request)))
           // An invalid authenticator was found. The authenticator will be discarded
-          case (Some(authenticator), identity) if !authenticator.extract.isValid =>
+          case (Some(authenticator), identity, _) if !authenticator.extract.isValid =>
             block(UserAwareRequest(None, None, dyn, request)).flatMap {
               case hr @ HandlerResult(pr, d) =>
                 environment.authenticatorService.discard(authenticator.extract, pr).map(r => hr.copy(r))

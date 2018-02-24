@@ -60,11 +60,11 @@ case class UnsecuredRequestHandlerBuilder[E <: Env](
         implicit val dyn = dynamicEnvironment
         handleAuthentication.flatMap {
           // A user is authenticated. The request will be forbidden
-          case (Some(authenticator), Some(identity)) =>
+          case (Some(authenticator), Some(identity), _) =>
             environment.eventBus.publish(NotAuthorizedEvent(identity, request))
             handleBlock(authenticator, _ => errorHandler.onNotAuthorized.map(r => HandlerResult(r)))
           // An authenticator but no user was found. The request will be granted and the authenticator will be discarded
-          case (Some(authenticator), None) =>
+          case (Some(authenticator), None, _) =>
             block(request).flatMap {
               case hr @ HandlerResult(pr, d) =>
                 environment.authenticatorService.discard(authenticator.extract, pr).map(r => hr.copy(r))

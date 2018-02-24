@@ -134,20 +134,20 @@ trait RequestHandlerBuilder[E <: Env, +R[_]] extends ExecutionContextProvider {
    * @return A tuple which consists of (maybe the existing authenticator on the left or a
    *         new authenticator on the right -> maybe the identity).
    */
-  protected def handleAuthentication[B](implicit request: Request[B], dyn: E#D): Future[(Option[Either[E#A, E#A]], Option[E#I])] = {
+  protected def handleAuthentication[B](implicit request: Request[B], dyn: E#D): Future[(Option[Either[E#A, E#A]], Option[E#I], E#D)] = {
     environment.authenticatorService.retrieve.flatMap {
       // A valid authenticator was found so we retrieve also the identity
-      case Some(a) if a.isValid  => environment.identityService.retrieve(a.loginInfo).map(i => Some(Left(a)) -> i)
+      case Some(a) if a.isValid  => environment.identityService.retrieve(a.loginInfo).map(i => (Some(Left(a)), i, dyn))
       // An invalid authenticator was found so we needn't retrieve the identity
-      case Some(a) if !a.isValid => Future.successful(Some(Left(a)) -> None)
+      case Some(a) if !a.isValid => Future.successful((Some(Left(a)), None, dyn))
       // No authenticator was found so we try to authenticate with a request provider
       case None => handleRequestProviderAuthentication.flatMap {
         // Authentication was successful, so we retrieve the identity and create a new authenticator for it
         case Some(loginInfo) => environment.identityService.retrieve(loginInfo).flatMap { i =>
-          environment.authenticatorService.create(loginInfo).map(a => Some(Right(a)) -> i)
+          environment.authenticatorService.create(loginInfo).map(a => (Some(Right(a)), i, dyn))
         }
         // No identity and no authenticator was found
-        case None => Future.successful(None -> None)
+        case None => Future.successful((None, None, dyn))
       }
     }
   }

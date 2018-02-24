@@ -52,7 +52,7 @@ case class SecuredRequest[E <: Env, B](identity: E#I, authenticator: E#A, dynami
 case class SecuredRequestHandlerBuilder[E <: Env](
   environment: Environment[E],
   errorHandler: SecuredErrorHandler,
-  authorization: Option[Authorization[E#I, E#A]])
+  authorization: Option[Authorization[E#I, E#A, E#D]])
   extends RequestHandlerBuilder[E, ({ type R[B] = SecuredRequest[E, B] })#R] {
 
   /**
@@ -70,7 +70,7 @@ case class SecuredRequestHandlerBuilder[E <: Env](
    * @param authorization An authorization object that checks if the user is authorized to invoke the action.
    * @return A secured action handler builder with an authorization in place.
    */
-  def apply(authorization: Authorization[E#I, E#A]) =
+  def apply(authorization: Authorization[E#I, E#A, E#D]) =
     SecuredRequestHandlerBuilder[E](environment, errorHandler, Some(authorization))
 
   /**
@@ -126,11 +126,11 @@ case class SecuredRequestHandlerBuilder[E <: Env](
    * @tparam B The type of the request body.
    * @return The authentication result with the additional authorization status.
    */
-  private def withAuthorization[B](result: Future[(Option[Either[E#A, E#A]], Option[E#I])])(implicit request: Request[B]) = {
+  private def withAuthorization[B](result: Future[(Option[Either[E#A, E#A]], Option[E#I], E#D)])(implicit request: Request[B]) = {
     result.flatMap {
-      case (Some(a), Some(i)) =>
-        authorization.map(_.isAuthorized(i, a.extract)).getOrElse(Future.successful(true)).map(b => (Some(a), Some(i), Some(b)))
-      case (a, i) =>
+      case (Some(a), Some(i), dyn) =>
+        authorization.map(_.isAuthorized(i, a.extract, dyn)).getOrElse(Future.successful(true)).map(b => (Some(a), Some(i), Some(b)))
+      case (a, i, _) =>
         Future.successful((a, i, None))
     }
   }
@@ -209,7 +209,7 @@ case class SecuredActionBuilder[E <: Env, P](
    * @param authorization An authorization object that checks if the user is authorized to invoke the action.
    * @return A secured action builder.
    */
-  def apply(authorization: Authorization[E#I, E#A]) = SecuredActionBuilder[E, P](requestHandler(authorization), parser)
+  def apply(authorization: Authorization[E#I, E#A, E#D]) = SecuredActionBuilder[E, P](requestHandler(authorization), parser)
 
   /**
    * Invokes the block.
