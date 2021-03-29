@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.providers
 
 import com.mohiva.play.silhouette.api.util.MockHTTPLayer
@@ -31,10 +31,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
- * Abstract test case for the [[OAuth1Provider]] class.
- *
- * These tests will be additionally executed before every OAuth1 provider spec.
- */
+  * Abstract test case for the [[OAuth1Provider]] class.
+  *
+  * These tests will be additionally executed before every OAuth1 provider spec.
+  */
 abstract class OAuth1ProviderSpec extends SocialProviderSpec[OAuth1Info] {
   isolated
 
@@ -67,10 +67,8 @@ abstract class OAuth1ProviderSpec extends SocialProviderSpec[OAuth1Info] {
 
     "redirect to authorization URL if request token could be retrieved" in new WithApplication {
       implicit val req = FakeRequest()
-      val serializedTokenSecret = "my.serialized.token.secret"
-
       c.oAuthService.retrieveRequestToken(c.oAuthSettings.callbackURL) returns Future.successful(c.oAuthInfo)
-      c.oAuthService.redirectUrl(any) returns c.oAuthSettings.authorizationURL
+      c.oAuthService.redirectUrl(any) answers { (_: Any) => c.oAuthSettings.authorizationURL }
       c.oAuthTokenSecretProvider.build(any)(any, any) returns Future.successful(c.oAuthTokenSecret)
       c.oAuthTokenSecretProvider.publish(any, any)(any) answers { (a, _) =>
         a.asInstanceOf[Array[Any]](0).asInstanceOf[Result]
@@ -94,7 +92,10 @@ abstract class OAuth1ProviderSpec extends SocialProviderSpec[OAuth1Info] {
       verifyCallbackURLResolution("/callback-url", secure = true, "https://www.example.com/callback-url")
     }
 
-    def verifyCallbackURLResolution(callbackURL: String, secure: Boolean, resolvedCallbackURL: String) = {
+    def verifyCallbackURLResolution(
+        callbackURL: String,
+        secure: Boolean,
+        resolvedCallbackURL: String) = {
       implicit val req = FakeRequest[AnyContent](
         method = GET,
         uri = "/request-path/something",
@@ -106,21 +107,25 @@ abstract class OAuth1ProviderSpec extends SocialProviderSpec[OAuth1Info] {
       c.oAuthSettings.callbackURL returns callbackURL
 
       c.oAuthService.retrieveRequestToken(any)(any) returns Future.successful(c.oAuthInfo)
-      c.oAuthService.redirectUrl(c.oAuthInfo.token) returns c.oAuthSettings.authorizationURL
+      c.oAuthService.redirectUrl(c.oAuthInfo.token) answers { (_: Any) => c.oAuthSettings.authorizationURL }
       c.oAuthTokenSecretProvider.build(any)(any, any) returns Future.successful(c.oAuthTokenSecret)
-      c.oAuthTokenSecretProvider.publish(any, any)(any) returns Results.Redirect(c.oAuthSettings.authorizationURL)
+      c.oAuthTokenSecretProvider.publish(any, any)(any) answers { (_: Any) =>
+        Results.Redirect(c.oAuthSettings.authorizationURL)
+      }
 
       await(c.provider.authenticate())
       there was one(c.oAuthService).retrieveRequestToken(resolvedCallbackURL)
     }
 
     "fail with an UnexpectedResponseException if access token cannot be retrieved" in new WithApplication {
-      val tokenSecret = "my.token.secret"
+      val tokenSecret  = "my.token.secret"
       implicit val req = FakeRequest(GET, "?" + OAuthVerifier + "=my.verifier&" + OAuthToken + "=my.token")
 
       c.oAuthTokenSecret.value returns tokenSecret
       c.oAuthTokenSecretProvider.retrieve(any, any) returns Future.successful(c.oAuthTokenSecret)
-      c.oAuthService.retrieveAccessToken(c.oAuthInfo.copy(secret = tokenSecret), "my.verifier") returns Future.failed(new Exception(""))
+      c.oAuthService.retrieveAccessToken(c.oAuthInfo.copy(secret = tokenSecret), "my.verifier") returns Future.failed(
+            new Exception("")
+          )
 
       failed[UnexpectedResponseException](c.provider.authenticate()) {
         case e => e.getMessage must startWith(ErrorAccessToken.format(c.provider.id, ""))
@@ -128,12 +133,13 @@ abstract class OAuth1ProviderSpec extends SocialProviderSpec[OAuth1Info] {
     }
 
     "return the auth info" in new WithApplication {
-      val tokenSecret = "my.token.secret"
+      val tokenSecret  = "my.token.secret"
       implicit val req = FakeRequest(GET, "?" + OAuthVerifier + "=my.verifier&" + OAuthToken + "=my.token")
 
       c.oAuthTokenSecret.value returns tokenSecret
       c.oAuthTokenSecretProvider.retrieve(any, any) returns Future.successful(c.oAuthTokenSecret)
-      c.oAuthService.retrieveAccessToken(c.oAuthInfo.copy(secret = tokenSecret), "my.verifier") returns Future.successful(c.oAuthInfo)
+      c.oAuthService.retrieveAccessToken(c.oAuthInfo.copy(secret = tokenSecret), "my.verifier") returns Future
+            .successful(c.oAuthInfo)
 
       authInfo(c.provider.authenticate())(_ must be equalTo c.oAuthInfo)
     }
@@ -147,16 +153,16 @@ abstract class OAuth1ProviderSpec extends SocialProviderSpec[OAuth1Info] {
   }
 
   /**
-   * Defines the context for the abstract OAuth1 provider spec.
-   *
-   * @return The Context to use for the abstract OAuth1 provider spec.
-   */
+    * Defines the context for the abstract OAuth1 provider spec.
+    *
+    * @return The Context to use for the abstract OAuth1 provider spec.
+    */
   protected def context: OAuth1ProviderSpecContext
 }
 
 /**
- * Context for the OAuth1ProviderSpec.
- */
+  * Context for the OAuth1ProviderSpec.
+  */
 trait OAuth1ProviderSpecContext extends Scope with Mockito with ThrownExpectations {
 
   abstract class TestSecret extends OAuth1TokenSecret
@@ -165,8 +171,8 @@ trait OAuth1ProviderSpecContext extends Scope with Mockito with ThrownExpectatio
   }
 
   /**
-   * The HTTP layer mock.
-   */
+    * The HTTP layer mock.
+    */
   lazy val httpLayer = {
     val m = mock[MockHTTPLayer]
     m.executionContext returns global
@@ -174,13 +180,13 @@ trait OAuth1ProviderSpecContext extends Scope with Mockito with ThrownExpectatio
   }
 
   /**
-   * A OAuth1 info.
-   */
+    * A OAuth1 info.
+    */
   lazy val oAuthInfo = OAuth1Info("my.token", "my.consumer.secret")
 
   /**
-   * The OAuth1 service mock.
-   */
+    * The OAuth1 service mock.
+    */
   lazy val oAuthService: OAuth1Service = {
     val s = mock[PlayOAuth1Service]
     s.use10a returns true
@@ -189,22 +195,22 @@ trait OAuth1ProviderSpecContext extends Scope with Mockito with ThrownExpectatio
   }
 
   /**
-   * A OAuth1 token secret.
-   */
+    * A OAuth1 token secret.
+    */
   lazy val oAuthTokenSecret: TestSecret = mock[TestSecret]
 
   /**
-   * The OAuth1 token secret provider mock.
-   */
+    * The OAuth1 token secret provider mock.
+    */
   lazy val oAuthTokenSecretProvider: TestStateProvider = mock[TestStateProvider]
 
   /**
-   * The OAuth1 settings.
-   */
+    * The OAuth1 settings.
+    */
   def oAuthSettings: OAuth1Settings
 
   /**
-   * The provider to test.
-   */
+    * The provider to test.
+    */
   def provider: OAuth1Provider
 }

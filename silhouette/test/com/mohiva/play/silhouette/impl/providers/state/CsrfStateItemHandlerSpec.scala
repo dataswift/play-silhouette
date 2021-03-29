@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.providers.state
 
 import com.mohiva.play.silhouette.api.crypto.Signer
@@ -32,8 +32,8 @@ import scala.concurrent.Future
 import scala.util.Success
 
 /**
- *  Test case for the [[CsrfStateItemHandler]] class.
- */
+  *  Test case for the [[CsrfStateItemHandler]] class.
+  */
 class CsrfStateItemHandlerSpec extends PlaySpecification with Mockito with JsonMatchers {
 
   "The `item` method" should {
@@ -93,73 +93,74 @@ class CsrfStateItemHandlerSpec extends PlaySpecification with Mockito with JsonM
   "The `publish` method" should {
     "publish the state item to the client" in new Context {
       implicit val request = FakeRequest()
-      val result = csrfStateItemHandler.publish(csrfStateItem, Results.Ok)
+      val result           = csrfStateItemHandler.publish(csrfStateItem, Results.Ok)
 
       cookies(Future.successful(result)).get(settings.cookieName) must beSome(cookie(csrfToken))
     }
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
 
     /**
-     * The ID generator implementation.
-     */
+      * The ID generator implementation.
+      */
     val idGenerator = mock[IDGenerator].smart
 
     /**
-     * The settings.
-     */
+      * The settings.
+      */
     val settings = CsrfStateSettings()
 
     /**
-     * The signer implementation.
-     *
-     * The signer returns the same value as passed to the methods. This is enough for testing.
-     */
+      * The signer implementation.
+      *
+      * The signer returns the same value as passed to the methods. This is enough for testing.
+      */
     val signer = {
       val c = mock[Signer].smart
-      c.sign(any) answers { p => p.asInstanceOf[String] }
-      c.extract(any) answers { p => Success(p.asInstanceOf[String]) }
+      c.sign(any) answers { (p: Any) => p.asInstanceOf[String] }
+      c.extract(any) answers { (p: Any) => Success(p.asInstanceOf[String]) }
       c
     }
 
     /**
-     * A CSRF token.
-     */
+      * A CSRF token.
+      */
     val csrfToken = "csrfToken"
 
     /**
-     * A CSRF state item.
-     */
+      * A CSRF state item.
+      */
     val csrfStateItem = CsrfStateItem(csrfToken)
 
     /**
-     * The serialized type of the CSRF state item.
-     */
+      * The serialized type of the CSRF state item.
+      */
     val csrfItemStructure = ItemStructure(ID, Json.toJson(csrfStateItem))
 
     /**
-     * An instance of the CSRF state item handler.
-     */
+      * An instance of the CSRF state item handler.
+      */
     val csrfStateItemHandler = new CsrfStateItemHandler(settings, idGenerator, signer)
 
     /**
-     * A helper method to create a cookie.
-     *
-     * @param value The cookie value.
-     * @return A cookie instance with the given value.
-     */
-    def cookie(value: String): Cookie = Cookie(
-      name = settings.cookieName,
-      value = signer.sign(value),
-      maxAge = Some(settings.expirationTime.toSeconds.toInt),
-      path = settings.cookiePath,
-      domain = settings.cookieDomain,
-      secure = settings.secureCookie,
-      httpOnly = settings.httpOnlyCookie
-    )
+      * A helper method to create a cookie.
+      *
+      * @param value The cookie value.
+      * @return A cookie instance with the given value.
+      */
+    def cookie(value: String): Cookie =
+      Cookie(
+        name = settings.cookieName,
+        value = signer.sign(value),
+        maxAge = Some(settings.expirationTime.toSeconds.toInt),
+        path = settings.cookiePath,
+        domain = settings.cookieDomain,
+        secure = settings.secureCookie,
+        httpOnly = settings.httpOnlyCookie
+      )
   }
 }

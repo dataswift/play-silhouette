@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.providers
 
 import com.mohiva.play.silhouette.api.util.HTTPLayer
@@ -30,10 +30,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
- * Abstract test case for the [[OpenIDProvider]] class.
- *
- * These tests will be additionally executed before every OpenIDProvider provider spec.
- */
+  * Abstract test case for the [[OpenIDProvider]] class.
+  *
+  * These tests will be additionally executed before every OpenIDProvider provider spec.
+  */
 abstract class OpenIDProviderSpec extends SocialProviderSpec[OpenIDInfo] {
   isolated
 
@@ -51,7 +51,7 @@ abstract class OpenIDProviderSpec extends SocialProviderSpec[OpenIDInfo] {
 
     "redirect to provider by using the provider URL" in new WithApplication {
       implicit val req = FakeRequest()
-      c.openIDService.redirectURL(any, any)(any) returns Future.successful(c.openIDSettings.providerURL)
+      c.openIDService.redirectURL(any, any)(any) answers { (_: Any) => Future.successful(c.openIDSettings.providerURL) }
 
       result(c.provider.authenticate()) { result =>
         status(result) must equalTo(SEE_OTHER)
@@ -61,7 +61,7 @@ abstract class OpenIDProviderSpec extends SocialProviderSpec[OpenIDInfo] {
 
     "redirect to provider by using a openID" in new WithApplication {
       implicit val req = FakeRequest(GET, "?openID=my.open.id")
-      c.openIDService.redirectURL(any, any)(any) returns Future.successful(c.openIDSettings.providerURL)
+      c.openIDService.redirectURL(any, any)(any) answers { (_: Any) => Future.successful(c.openIDSettings.providerURL) }
 
       result(c.provider.authenticate()) { result =>
         status(result) must equalTo(SEE_OTHER)
@@ -74,14 +74,20 @@ abstract class OpenIDProviderSpec extends SocialProviderSpec[OpenIDInfo] {
     }
 
     "resolves path relative callbackURLs before starting the flow" in new WithApplication {
-      verifyRelativeCallbackURLResolution("callback-url", secure = false, "http://www.example.com/request-path/callback-url")
+      verifyRelativeCallbackURLResolution("callback-url",
+                                          secure = false,
+                                          "http://www.example.com/request-path/callback-url"
+      )
     }
 
     "resolves relative callbackURLs before starting the flow over https" in new WithApplication {
       verifyRelativeCallbackURLResolution("/callback-url", secure = true, "https://www.example.com/callback-url")
     }
 
-    def verifyRelativeCallbackURLResolution(callbackURL: String, secure: Boolean, resolvedCallbackURL: String) = {
+    def verifyRelativeCallbackURLResolution(
+        callbackURL: String,
+        secure: Boolean,
+        resolvedCallbackURL: String) = {
       implicit val req = FakeRequest[AnyContent](
         method = GET,
         uri = "/request-path/something",
@@ -91,7 +97,7 @@ abstract class OpenIDProviderSpec extends SocialProviderSpec[OpenIDInfo] {
       )
 
       c.openIDSettings.callbackURL returns callbackURL
-      c.openIDService.redirectURL(any, any)(any) returns Future.successful(c.openIDSettings.providerURL)
+      c.openIDService.redirectURL(any, any)(any) answers { (_: Any) => Future.successful(c.openIDSettings.providerURL) }
 
       await(c.provider.authenticate())
       there was one(c.openIDService).redirectURL(any, ===(resolvedCallbackURL))(any)
@@ -122,21 +128,21 @@ abstract class OpenIDProviderSpec extends SocialProviderSpec[OpenIDInfo] {
   }
 
   /**
-   * Defines the context for the abstract OpenIDProvider provider spec.
-   *
-   * @return The Context to use for the abstract OpenIDProvider provider spec.
-   */
+    * Defines the context for the abstract OpenIDProvider provider spec.
+    *
+    * @return The Context to use for the abstract OpenIDProvider provider spec.
+    */
   protected def context: OpenIDProviderSpecContext
 }
 
 /**
- * Context for the OpenIDProviderSpec.
- */
+  * Context for the OpenIDProviderSpec.
+  */
 trait OpenIDProviderSpecContext extends Scope with Mockito with ThrownExpectations {
 
   /**
-   * The HTTP layer mock.
-   */
+    * The HTTP layer mock.
+    */
   lazy val httpLayer = {
     val m = mock[HTTPLayer]
     m.executionContext returns global
@@ -144,22 +150,22 @@ trait OpenIDProviderSpecContext extends Scope with Mockito with ThrownExpectatio
   }
 
   /**
-   * A OpenID info.
-   */
+    * A OpenID info.
+    */
   lazy val openIDInfo = OpenIDInfo("my.openID", Map())
 
   /**
-   * The OpenID service mock.
-   */
+    * The OpenID service mock.
+    */
   lazy val openIDService: OpenIDService = mock[OpenIDService]
 
   /**
-   * The OpenID settings.
-   */
+    * The OpenID settings.
+    */
   def openIDSettings: OpenIDSettings
 
   /**
-   * The provider to test.
-   */
+    * The provider to test.
+    */
   def provider: OpenIDProvider
 }

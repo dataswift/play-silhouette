@@ -1,23 +1,23 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.providers.oauth1.secrets
 
 import java.util.regex.Pattern
 
-import com.mohiva.play.silhouette.api.crypto.{ Base64, Signer, Crypter }
+import com.mohiva.play.silhouette.api.crypto.{ Base64, Crypter, Signer }
 import com.mohiva.play.silhouette.api.util.Clock
 import com.mohiva.play.silhouette.impl.exceptions.OAuth1TokenSecretException
 import com.mohiva.play.silhouette.impl.providers.OAuth1Info
@@ -38,8 +38,8 @@ import scala.language.postfixOps
 import scala.util.{ Failure, Success }
 
 /**
- * Test case for the [[com.mohiva.play.silhouette.impl.providers.oauth1.secrets.CookieSecret]] class.
- */
+  * Test case for the [[com.mohiva.play.silhouette.impl.providers.oauth1.secrets.CookieSecret]] class.
+  */
 class CookieSecretSpec extends PlaySpecification with Mockito with JsonMatchers with NoLanguageFeatures {
 
   "The `isExpired` method of the secret" should {
@@ -69,25 +69,32 @@ class CookieSecretSpec extends PlaySpecification with Mockito with JsonMatchers 
   "The `unserialize` method of the secret" should {
     "throw an OAuth1TokenSecretException if a secret contains invalid json" in new WithApplication with Context {
       val value = "invalid"
-      val msg = Pattern.quote(InvalidJson.format(value))
+      val msg   = Pattern.quote(InvalidJson.format(value))
 
-      unserialize(crypter.encrypt(value), signer, crypter) must beFailedTry.withThrowable[OAuth1TokenSecretException](msg)
+      unserialize(crypter.encrypt(value), signer, crypter) must beFailedTry.withThrowable[OAuth1TokenSecretException](
+            msg
+          )
     }
 
-    "throw an OAuth1TokenSecretException if a secret contains valid json but invalid secret" in new WithApplication with Context {
+    "throw an OAuth1TokenSecretException if a secret contains valid json but invalid secret" in new WithApplication
+      with Context {
       val value = "{ \"test\": \"test\" }"
-      val msg = "^" + Pattern.quote(InvalidSecretFormat.format("")) + ".*"
+      val msg   = "^" + Pattern.quote(InvalidSecretFormat.format("")) + ".*"
 
-      unserialize(crypter.encrypt(value), signer, crypter) must beFailedTry.withThrowable[OAuth1TokenSecretException](msg)
+      unserialize(crypter.encrypt(value), signer, crypter) must beFailedTry.withThrowable[OAuth1TokenSecretException](
+            msg
+          )
     }
 
     "throw an OAuth1TokenSecretException if a secret is badly signed" in new WithApplication with Context {
       signer.extract(any) returns Failure(new Exception("Bad signature"))
 
       val value = serialize(secret, signer, crypter)
-      val msg = Pattern.quote(InvalidCookieSignature)
+      val msg   = Pattern.quote(InvalidCookieSignature)
 
-      unserialize(crypter.encrypt(value), signer, crypter) must beFailedTry.withThrowable[OAuth1TokenSecretException](msg)
+      unserialize(crypter.encrypt(value), signer, crypter) must beFailedTry.withThrowable[OAuth1TokenSecretException](
+            msg
+          )
     }
   }
 
@@ -102,7 +109,7 @@ class CookieSecretSpec extends PlaySpecification with Mockito with JsonMatchers 
   "The `build` method of the provider" should {
     "return a new secret" in new WithApplication with Context {
       implicit val req = FakeRequest()
-      val dateTime = new DateTime(2014, 8, 8, 0, 0, 0)
+      val dateTime     = new DateTime(2014, 8, 8, 0, 0, 0)
 
       clock.now returns dateTime
 
@@ -118,48 +125,53 @@ class CookieSecretSpec extends PlaySpecification with Mockito with JsonMatchers 
       implicit val req = FakeRequest()
 
       await(provider.retrieve) must throwA[OAuth1TokenSecretException].like {
-        case e => e.getMessage must startWith(ClientSecretDoesNotExists.format(""))
-      }
+            case e => e.getMessage must startWith(ClientSecretDoesNotExists.format(""))
+          }
     }
 
     "throw an OAuth1TokenSecretException if secret is expired" in new WithApplication with Context {
       val expiredSecret = secret.copy(expirationDate = DateTime.now.minusHours(1))
 
-      implicit val req = FakeRequest().withCookies(Cookie(settings.cookieName, CookieSecret.serialize(expiredSecret, signer, crypter)))
+      implicit val req =
+        FakeRequest().withCookies(Cookie(settings.cookieName, CookieSecret.serialize(expiredSecret, signer, crypter)))
 
       await(provider.retrieve) must throwA[OAuth1TokenSecretException].like {
-        case e => e.getMessage must startWith(SecretIsExpired.format())
-      }
+            case e => e.getMessage must startWith(SecretIsExpired.format())
+          }
     }
 
     "throw an OAuth1TokenSecretException if client secret contains invalid json" in new WithApplication with Context {
       implicit val req = FakeRequest().withCookies(Cookie(settings.cookieName, crypter.encrypt("{")))
 
       await(provider.retrieve) must throwA[OAuth1TokenSecretException].like {
-        case e => e.getMessage must startWith(InvalidJson.format("{"))
-      }
+            case e => e.getMessage must startWith(InvalidJson.format("{"))
+          }
     }
 
-    "throw an OAuth1TokenSecretException if client secret contains valid json but invalid secret" in new WithApplication with Context {
-      implicit val req = FakeRequest().withCookies(Cookie(settings.cookieName, crypter.encrypt("{ \"test\": \"test\" }")))
+    "throw an OAuth1TokenSecretException if client secret contains valid json but invalid secret" in new WithApplication
+      with Context {
+      implicit val req =
+        FakeRequest().withCookies(Cookie(settings.cookieName, crypter.encrypt("{ \"test\": \"test\" }")))
 
       await(provider.retrieve) must throwA[OAuth1TokenSecretException].like {
-        case e => e.getMessage must startWith(InvalidSecretFormat.format(""))
-      }
+            case e => e.getMessage must startWith(InvalidSecretFormat.format(""))
+          }
     }
 
     "throw an OAuth1TokenSecretException if client secret is badly signed" in new WithApplication with Context {
       signer.extract(any) returns Failure(new Exception("Bad signature"))
 
-      implicit val req = FakeRequest().withCookies(Cookie(settings.cookieName, CookieSecret.serialize(secret, signer, crypter)))
+      implicit val req =
+        FakeRequest().withCookies(Cookie(settings.cookieName, CookieSecret.serialize(secret, signer, crypter)))
 
       await(provider.retrieve) must throwA[OAuth1TokenSecretException].like {
-        case e => e.getMessage must startWith(InvalidCookieSignature)
-      }
+            case e => e.getMessage must startWith(InvalidCookieSignature)
+          }
     }
 
     "return the secret if it's valid" in new WithApplication with Context {
-      implicit val req = FakeRequest().withCookies(Cookie(settings.cookieName, CookieSecret.serialize(secret, signer, crypter)))
+      implicit val req =
+        FakeRequest().withCookies(Cookie(settings.cookieName, CookieSecret.serialize(secret, signer, crypter)))
 
       await(provider.retrieve) must be equalTo secret
     }
@@ -168,78 +180,80 @@ class CookieSecretSpec extends PlaySpecification with Mockito with JsonMatchers 
   "The `publish` method of the provider" should {
     "add the secret to the cookie" in new WithApplication with Context {
       implicit val req = FakeRequest(GET, "/")
-      val result = Future.successful(provider.publish(Results.Ok, secret))
+      val result       = Future.successful(provider.publish(Results.Ok, secret))
 
       cookies(result).get(settings.cookieName) should beSome[Cookie].which { c =>
-        c.name must be equalTo settings.cookieName
-        unserialize(c.value, signer, crypter).get must be equalTo secret
-        c.maxAge must beSome(settings.expirationTime.toSeconds.toInt)
-        c.path must be equalTo settings.cookiePath
-        c.domain must be equalTo settings.cookieDomain
-        c.secure must be equalTo settings.secureCookie
-      }
+            c.name must be equalTo settings.cookieName
+            unserialize(c.value, signer, crypter).get must be equalTo secret
+            c.maxAge must beSome(settings.expirationTime.toSeconds.toInt)
+            c.path must be equalTo settings.cookiePath
+            c.domain must be equalTo settings.cookieDomain
+            c.secure must be equalTo settings.secureCookie
+          }
     }
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
 
     /**
-     * The clock implementation.
-     */
+      * The clock implementation.
+      */
     lazy val clock: Clock = mock[Clock].smart
 
     /**
-     * The settings.
-     */
+      * The settings.
+      */
     lazy val settings = CookieSecretSettings(
       cookieDomain = None,
       expirationTime = 5 minutes
     )
 
     /**
-     * The crypter implementation.
-     *
-     * We use BASE64 here to encode the cookie values. Otherwise an error could occur if we try to store
-     * none cookie values in a cookie.
-     */
+      * The crypter implementation.
+      *
+      * We use BASE64 here to encode the cookie values. Otherwise an error could occur if we try to store
+      * none cookie values in a cookie.
+      */
     lazy val crypter = {
       val c = mock[Crypter].smart
-      c.encrypt(any) answers { p => Base64.encode(p.asInstanceOf[String]) }
-      c.decrypt(any) answers { p => Base64.decode(p.asInstanceOf[String]) }
+      c.encrypt(any) answers { (p: Any) => Base64.encode(p.asInstanceOf[String]) }
+      c.decrypt(any) answers { (p: Any) => Base64.decode(p.asInstanceOf[String]) }
       c
     }
 
     /**
-     * The signer implementation.
-     *
-     * The signer returns the same value as passed to the methods. This is enough for testing.
-     */
+      * The signer implementation.
+      *
+      * The signer returns the same value as passed to the methods. This is enough for testing.
+      */
     lazy val signer = {
       val c = mock[Signer].smart
-      c.sign(any) answers { p => p.asInstanceOf[String] }
-      c.extract(any) answers { p => Success(p.asInstanceOf[String]) }
+      c.sign(any) answers { (p: Any) => p.asInstanceOf[String] }
+      c.extract(any) answers { (p: Any) => Success(p.asInstanceOf[String]) }
       c
     }
 
     /**
-     * The provider implementation to test.
-     */
+      * The provider implementation to test.
+      */
     lazy val provider = new CookieSecretProvider(settings, signer, crypter, clock)
 
     /**
-     * An OAuth1 info.
-     */
+      * An OAuth1 info.
+      */
     lazy val oAuthInfo = OAuth1Info("my.token", "my.secret")
 
     /**
-     * A secret to test.
-     */
-    lazy val secret = spy(new CookieSecret(
-      expirationDate = DateTime.now.plusSeconds(settings.expirationTime.toSeconds.toInt),
-      value = "value"
-    ))
+      * A secret to test.
+      */
+    lazy val secret = spy(
+      new CookieSecret(
+        expirationDate = DateTime.now.plusSeconds(settings.expirationTime.toSeconds.toInt),
+        value = "value"
+      )
+    )
   }
 }
