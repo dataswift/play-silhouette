@@ -76,6 +76,7 @@ lazy val silhouetteTestkit = Project(
   base = file("silhouette-testkit")
 ).settings(publishSettings, libraryDependencies += Library.Play.test)
   .dependsOn(silhouette % "compile->compile;test->test")
+  .enablePlugins(PlayScala)
 
 val root = Project("play-silhouette-root", file("."))
   .aggregate(

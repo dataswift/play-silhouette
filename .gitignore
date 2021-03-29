@@ -13,3 +13,6 @@ dist
 /.settings
 /.target
 /.cache
+/.scalafix-common.conf
+/.scalafmt-common.conf
+/.bsp/
