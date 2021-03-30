@@ -15,12 +15,13 @@
   */
 import Dependencies.Library
 
-val publishSettings = {
+val publishSettings = Seq(
+  publishMavenStyle := true,
   publishTo := {
     val prefix = if (isSnapshot.value) "snapshots" else "releases"
     Some(prefix at s"s3://library-artifacts-$prefix.hubofallthings.com")
   }
-}
+)
 
 lazy val silhouette = Project(
   id = "dataswift-play-silhouette",
