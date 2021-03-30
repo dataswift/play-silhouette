@@ -1,5 +1,3 @@
-import Dependencies.Library
-
 /**
   * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
   *
@@ -15,6 +13,7 @@ import Dependencies.Library
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
+import Dependencies.Library
 
 val publishSettings = {
   publishTo := {
