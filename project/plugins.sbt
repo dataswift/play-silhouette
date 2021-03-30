@@ -1,25 +1,7 @@
-// Comment to get more information during initialization
-logLevel := Level.Warn
-
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.9")
-
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.0")
-
-addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.1.0")
-
-addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
-
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "0.5.1")
-
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
-
-addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.3")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "0.8.2")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.5.3")
-
-// S3 based SBT resolver
-resolvers += "Era7 maven releases" at "https://s3-eu-west-1.amazonaws.com/releases.era7.com"
-
-addSbtPlugin("ohnosequences" % "sbt-s3-resolver" % "0.15.0")
+resolvers += "HAT Library Artifacts releases" at "https://s3-eu-west-1.amazonaws.com/library-artifacts-releases.hubofallthings.com"
+addSbtPlugin("com.typesafe.play"  % "sbt-plugin"            % "2.8.7")
+addSbtPlugin("com.frugalmechanic" % "fm-sbt-s3-resolver"    % "0.19.0")
+addSbtPlugin("io.dataswift"       % "sbt-scalatools-common" % "0.2.3")
+addSbtPlugin("org.scalameta"      % "sbt-scalafmt"          % "2.4.2")
+addSbtPlugin("ch.epfl.scala"      % "sbt-scalafix"          % "0.9.26")
+addSbtPlugin("com.dwijnand"       % "sbt-dynver"            % "4.1.1")

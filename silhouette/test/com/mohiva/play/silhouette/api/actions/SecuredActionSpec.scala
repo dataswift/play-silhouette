@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.api.actions
 
 import javax.inject.Inject
@@ -22,7 +22,12 @@ import akka.testkit.TestProbe
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.actions.SecuredActionSpec._
 import com.mohiva.play.silhouette.api.exceptions.{ NotAuthenticatedException, NotAuthorizedException }
-import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService, DynamicEnvironmentProviderService, IdentityService }
+import com.mohiva.play.silhouette.api.services.{
+  AuthenticatorResult,
+  AuthenticatorService,
+  DynamicEnvironmentProviderService,
+  IdentityService
+}
 import net.codingwell.scalaguice.ScalaModule
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.matcher.JsonMatchers
@@ -42,8 +47,8 @@ import scala.language.postfixOps
 import scala.reflect.ClassTag
 
 /**
- * Test case for the [[com.mohiva.play.silhouette.api.actions.SecuredActionSpec]].
- */
+  * Test case for the [[com.mohiva.play.silhouette.api.actions.SecuredActionSpec]].
+  */
 class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers with NoLanguageFeatures {
 
   "The `SecuredAction` action" should {
@@ -157,7 +162,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         authorization.isAuthorized(any, any, any)(any) returns Future.successful(false)
 
@@ -180,7 +187,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         authorization.isAuthorized(any, any, any)(any) returns Future.successful(false)
 
@@ -201,7 +210,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         authorization.isAuthorized(any, any, any)(any) returns Future.successful(false)
 
@@ -222,7 +233,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
           val result = controller.defaultAction(request)
@@ -244,7 +257,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
           val result = controller.actionWithAuthorization(request)
@@ -258,18 +273,23 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
       }
     }
 
-    "use next request provider in the chain if first isn't responsible" in new InjectorContext with WithRequestProvider {
+    "use next request provider in the chain if first isn't responsible" in new InjectorContext
+      with WithRequestProvider {
       new WithApplication(app) with Context {
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
         tokenRequestProvider.authenticate(any)(any) returns Future.successful(None)
         basicAuthRequestProvider.authenticate(any)(any) returns Future.successful(Some(identity.loginInfo))
         env.authenticatorService.retrieve(any, any) returns Future.successful(None)
         env.authenticatorService.create(any)(any) returns Future.successful(authenticator)
-        env.authenticatorService.init(any)(any, any) answers { p => Future.successful(p.asInstanceOf[FakeAuthenticator#Value]) }
+        env.authenticatorService.init(any)(any, any) answers { (p: Any) =>
+          Future.successful(p.asInstanceOf[FakeAuthenticator#Value])
+        }
         env.authenticatorService.embed(any, any[Result])(any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
           val result = controller.actionWithAuthorization(request)
@@ -288,7 +308,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
         env.authenticatorService.retrieve(any, any) returns Future.successful(Some(authenticator))
         env.authenticatorService.touch(any) returns Left(authenticator)
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
@@ -310,7 +332,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
         env.authenticatorService.retrieve(any, any) returns Future.successful(Some(authenticator))
         env.authenticatorService.touch(any) returns Right(authenticator)
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
           val result = controller.actionWithAuthorization(request)
@@ -330,11 +354,15 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         tokenRequestProvider.authenticate(any)(any) returns Future.successful(Some(identity.loginInfo))
         env.authenticatorService.retrieve(any, any) returns Future.successful(None)
         env.authenticatorService.create(any)(any) returns Future.successful(authenticator)
-        env.authenticatorService.init(any)(any, any) answers { p => Future.successful(p.asInstanceOf[FakeAuthenticator#Value]) }
+        env.authenticatorService.init(any)(any, any) answers { (p: Any) =>
+          Future.successful(p.asInstanceOf[FakeAuthenticator#Value])
+        }
         env.authenticatorService.embed(any, any[Result])(any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
           val result = controller.actionWithAuthorization(request)
@@ -356,7 +384,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.renew(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
           val result = controller.renewAction(request)
@@ -379,7 +409,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.renew(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
@@ -401,7 +433,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.discard(any, any)(any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
@@ -425,7 +459,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.discard(any, any)(any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
@@ -448,7 +484,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
 
         withEvent[AuthenticatedEvent[FakeIdentity]] {
@@ -486,7 +524,9 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
         env.authenticatorService.update(any, any)(any, any) answers { (a, m) =>
           Future.successful(AuthenticatorResult(a.asInstanceOf[Array[Any]](1).asInstanceOf[Result]))
         }
-        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(Some(identity))
+        env.identityService.retrieve(identity.loginInfo)(FakeDynamicEnvironment()) returns Future.successful(
+              Some(identity)
+            )
         env.dynamicEnvironmentProviderService.retrieve(any) returns Future.successful(Some(FakeDynamicEnvironment()))
 
         val result = controller.defaultHandler(request)
@@ -532,13 +572,13 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
   }
 
   /**
-   * The injector context.
-   */
+    * The injector context.
+    */
   trait InjectorContext extends Scope {
 
     /**
-     * The Silhouette environment.
-     */
+      * The Silhouette environment.
+      */
     lazy val env = Environment[SecuredEnv](
       mock[IdentityService[SecuredEnv#I, SecuredEnv#D]],
       mock[AuthenticatorService[SecuredEnv#A, SecuredEnv#D]],
@@ -549,8 +589,8 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
     )
 
     /**
-     * An authorization mock.
-     */
+      * An authorization mock.
+      */
     lazy val authorization = {
       val a = mock[Authorization[SecuredEnv#I, SecuredEnv#A, SecuredEnv#D]]
       a.isAuthorized(any, any, any)(any) returns Future.successful(true)
@@ -558,18 +598,18 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
     }
 
     /**
-     * The guice application builder.
-     */
+      * The guice application builder.
+      */
     lazy val app = new GuiceApplicationBuilder()
       .bindings(new GuiceModule)
       .overrides(bind[SecuredErrorHandler].to[GlobalSecuredErrorHandler])
       .build()
 
     /**
-     * The guice module.
-     */
+      * The guice module.
+      */
     class GuiceModule extends ScalaModule {
-      def configure(): Unit = {
+      override def configure(): Unit = {
         bind[Environment[SecuredEnv]].toInstance(env)
         bind[Authorization[SecuredEnv#I, SecuredEnv#A, SecuredEnv#D]].toInstance(authorization)
         bind[Silhouette[SecuredEnv]].to[SilhouetteProvider[SecuredEnv]]
@@ -578,48 +618,48 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
     }
 
     /**
-     * The context.
-     */
+      * The context.
+      */
     trait Context {
       self: WithApplication =>
 
       /**
-       * An identity.
-       */
+        * An identity.
+        */
       lazy val identity = FakeIdentity(LoginInfo("test", "1"))
 
       /**
-       * An authenticator.
-       */
+        * An authenticator.
+        */
       lazy val authenticator = FakeAuthenticator(LoginInfo("test", "1"))
 
       /**
-       * A fake request.
-       */
-      lazy implicit val request = FakeRequest()
+        * A fake request.
+        */
+      implicit lazy val request = FakeRequest()
 
       /**
-       * The secured controller.
-       */
-      lazy implicit val controller = app.injector.instanceOf[SecuredController]
+        * The secured controller.
+        */
+      implicit lazy val controller = app.injector.instanceOf[SecuredController]
 
       /**
-       * The Play actor system.
-       */
-      lazy implicit val system = app.injector.instanceOf[ActorSystem]
+        * The Play actor system.
+        */
+      implicit lazy val system = app.injector.instanceOf[ActorSystem]
 
       /**
-       * The test probe.
-       */
+        * The test probe.
+        */
       lazy val theProbe = TestProbe()
 
       /**
-       * Executes a block after event bus initialization, so that the event can be handled inside the given block.
-       *
-       * @param ct The class tag of the event.
-       * @tparam T The type of the event to handle.
-       * @return The result of the block.
-       */
+        * Executes a block after event bus initialization, so that the event can be handled inside the given block.
+        *
+        * @param ct The class tag of the event.
+        * @tparam T The type of the event to handle.
+        * @return The result of the block.
+        */
       def withEvent[T <: SilhouetteEvent](block: => Any)(implicit ct: ClassTag[T]) = {
         val listener = system.actorOf(Props(new Actor {
           def receive = {
@@ -635,31 +675,31 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
   }
 
   /**
-   * Adds some request providers in scope.
-   *
-   * We add two providers in scope to test the chaining of this providers.
-   */
+    * Adds some request providers in scope.
+    *
+    * We add two providers in scope to test the chaining of this providers.
+    */
   trait WithRequestProvider {
     self: InjectorContext =>
 
     /**
-     * A mock that simulates a token request provider.
-     */
+      * A mock that simulates a token request provider.
+      */
     lazy val tokenRequestProvider = mock[RequestProvider[SecuredEnv#D]]
 
     /**
-     * A mock that simulates a basic auth request provider.
-     */
+      * A mock that simulates a basic auth request provider.
+      */
     lazy val basicAuthRequestProvider = mock[RequestProvider[SecuredEnv#D]]
 
     /**
-     * A non request provider.
-     */
+      * A non request provider.
+      */
     lazy val nonRequestProvider = mock[RequestProvider[SecuredEnv#D]]
 
     /**
-     * The Silhouette environment.
-     */
+      * The Silhouette environment.
+      */
     override lazy val env = Environment[SecuredEnv](
       mock[IdentityService[FakeIdentity, FakeDynamicEnvironment]],
       mock[AuthenticatorService[FakeAuthenticator, FakeDynamicEnvironment]],
@@ -675,13 +715,13 @@ class SecuredActionSpec extends PlaySpecification with Mockito with JsonMatchers
 }
 
 /**
- * The companion object.
- */
+  * The companion object.
+  */
 object SecuredActionSpec {
 
   /**
-   * The environment type.
-   */
+    * The environment type.
+    */
   trait SecuredEnv extends Env {
     type I = FakeIdentity
     type A = FakeAuthenticator
@@ -689,185 +729,193 @@ object SecuredActionSpec {
   }
 
   /**
-   * A test identity.
-   *
-   * @param loginInfo The linked login info.
-   */
+    * A test identity.
+    *
+    * @param loginInfo The linked login info.
+    */
   case class FakeIdentity(loginInfo: LoginInfo) extends Identity
 
   /**
-   * A test authenticator.
-   *
-   * @param loginInfo The linked login info.
-   */
-  case class FakeAuthenticator(loginInfo: LoginInfo, isValid: Boolean = true) extends Authenticator
+    * A test authenticator.
+    *
+    * @param loginInfo The linked login info.
+    */
+  case class FakeAuthenticator(
+      loginInfo: LoginInfo,
+      isValid: Boolean = true)
+      extends Authenticator
 
   case class FakeDynamicEnvironment() extends DynamicEnvironment {
     def id = "FakeDynamicEnvironment"
   }
 
   case class FakeDynamicEnvironmentProviderService() extends DynamicEnvironmentProviderService[FakeDynamicEnvironment] {
+
     /**
-     * Retrieves a fake dynamic environment for a given request
-     *
-     * @param request The request for which to retrieve a dynamic environment
-     * @return The retrieved dynamic environment
-     */
-    def retrieve[B](request: Request[B]): Future[Option[FakeDynamicEnvironment]] = Future.successful(Some(FakeDynamicEnvironment()))
+      * Retrieves a fake dynamic environment for a given request
+      *
+      * @param request The request for which to retrieve a dynamic environment
+      * @return The retrieved dynamic environment
+      */
+    def retrieve[B](request: Request[B]): Future[Option[FakeDynamicEnvironment]] =
+      Future.successful(Some(FakeDynamicEnvironment()))
   }
 
   /**
-   * A simple authorization class.
-   *
-   * @param isAuthorized True if the access is authorized, false otherwise.
-   */
-  case class SimpleAuthorization(isAuthorized: Boolean = true) extends Authorization[FakeIdentity, FakeAuthenticator, FakeDynamicEnvironment] {
+    * A simple authorization class.
+    *
+    * @param isAuthorized True if the access is authorized, false otherwise.
+    */
+  case class SimpleAuthorization(isAuthorized: Boolean = true)
+      extends Authorization[FakeIdentity, FakeAuthenticator, FakeDynamicEnvironment] {
 
     /**
-     * Checks whether the user is authorized to execute an action or not.
-     *
-     * @param identity The current identity instance.
-     * @param authenticator The current authenticator instance.
-     * @param request The current request header.
-     * @tparam B The type of the request body.
-     * @return True if the user is authorized, false otherwise.
-     */
-    def isAuthorized[B](identity: FakeIdentity, authenticator: FakeAuthenticator, dynamicEnvironment: FakeDynamicEnvironment)(
-      implicit
-      request: Request[B]): Future[Boolean] = {
-
+      * Checks whether the user is authorized to execute an action or not.
+      *
+      * @param identity The current identity instance.
+      * @param authenticator The current authenticator instance.
+      * @param request The current request header.
+      * @tparam B The type of the request body.
+      * @return True if the user is authorized, false otherwise.
+      */
+    def isAuthorized[B](
+        identity: FakeIdentity,
+        authenticator: FakeAuthenticator,
+        dynamicEnvironment: FakeDynamicEnvironment
+      )(implicit
+        request: Request[B]): Future[Boolean] =
       Future.successful(isAuthorized)
-    }
   }
 
   /**
-   * The global secured error handler.
-   */
+    * The global secured error handler.
+    */
   class GlobalSecuredErrorHandler extends SecuredErrorHandler {
 
     /**
-     * Called when a user is not authenticated.
-     *
-     * As defined by RFC 2616, the status code of the response should be 401 Unauthorized.
-     *
-     * @param request The request header.
-     * @return The result to send to the client.
-     */
-    def onNotAuthenticated(implicit request: RequestHeader): Future[Result] = {
+      * Called when a user is not authenticated.
+      *
+      * As defined by RFC 2616, the status code of the response should be 401 Unauthorized.
+      *
+      * @param request The request header.
+      * @return The result to send to the client.
+      */
+    def onNotAuthenticated(implicit request: RequestHeader): Future[Result] =
       Future.successful(Unauthorized("global.not.authenticated"))
-    }
 
     /**
-     * Called when a user is authenticated but not authorized.
-     *
-     * As defined by RFC 2616, the status code of the response should be 403 Forbidden.
-     *
-     * @param request The request header.
-     * @return The result to send to the client.
-     */
-    def onNotAuthorized(implicit request: RequestHeader) = {
+      * Called when a user is authenticated but not authorized.
+      *
+      * As defined by RFC 2616, the status code of the response should be 403 Forbidden.
+      *
+      * @param request The request header.
+      * @return The result to send to the client.
+      */
+    def onNotAuthorized(implicit request: RequestHeader) =
       Future.successful(Forbidden("global.not.authorized"))
-    }
   }
 
   /**
-   * A secured controller.
-   *
-   * @param silhouette The Silhouette stack.
-   * @param authorization An authorization implementation.
-   * @param components The Play controller components.
-   */
+    * A secured controller.
+    *
+    * @param silhouette The Silhouette stack.
+    * @param authorization An authorization implementation.
+    * @param components The Play controller components.
+    */
   class SecuredController @Inject() (
-    silhouette: Silhouette[SecuredEnv],
-    authorization: Authorization[FakeIdentity, FakeAuthenticator, FakeDynamicEnvironment],
-    components: ControllerComponents
-  ) extends AbstractController(components) {
+      silhouette: Silhouette[SecuredEnv],
+      authorization: Authorization[FakeIdentity, FakeAuthenticator, FakeDynamicEnvironment],
+      components: ControllerComponents)
+      extends AbstractController(components) {
 
     /**
-     * A local error handler.
-     */
+      * A local error handler.
+      */
     lazy val errorHandler = new SecuredErrorHandler {
-      override def onNotAuthenticated(implicit request: RequestHeader) = {
+      override def onNotAuthenticated(implicit request: RequestHeader) =
         Future.successful(Unauthorized("local.not.authenticated"))
-      }
-      override def onNotAuthorized(implicit request: RequestHeader) = {
+      override def onNotAuthorized(implicit request: RequestHeader) =
         Future.successful(Forbidden("local.not.authorized"))
+    }
+
+    /**
+      * A secured action.
+      *
+      * @return The result to send to the client.
+      */
+    def defaultAction =
+      silhouette.SecuredAction { implicit request =>
+        render {
+          case Accepts.Json() => Ok(Json.obj("result" -> "full.access"))
+          case Accepts.Html() => Ok("full.access")
+        }
       }
-    }
 
     /**
-     * A secured action.
-     *
-     * @return The result to send to the client.
-     */
-    def defaultAction = silhouette.SecuredAction { implicit request =>
-      render {
-        case Accepts.Json() => Ok(Json.obj("result" -> "full.access"))
-        case Accepts.Html() => Ok("full.access")
+      * A secured action with an authorization and a custom error handler.
+      *
+      * @return The result to send to the client.
+      */
+    def actionWithAuthorizationAndErrorHandler = silhouette.SecuredAction(authorization)(errorHandler)(Ok)
+
+    /**
+      * A secured action with a custom error handler.
+      *
+      * @return The result to send to the client.
+      */
+    def actionWithErrorHandler = silhouette.SecuredAction(errorHandler)(Ok("full.access"))
+
+    /**
+      * A secured action with authorization.
+      *
+      * @return The result to send to the client.
+      */
+    def actionWithAuthorization = silhouette.SecuredAction(authorization)(Ok("full.access"))
+
+    /**
+      * A secured renew action.
+      *
+      * @return The result to send to the client.
+      */
+    def renewAction =
+      silhouette.SecuredAction.async { implicit request =>
+        implicit val dyn = request.dynamicEnvironment
+        silhouette.env.authenticatorService.renew(request.authenticator, Ok("renewed"))
       }
-    }
 
     /**
-     * A secured action with an authorization and a custom error handler.
-     *
-     * @return The result to send to the client.
-     */
-    def actionWithAuthorizationAndErrorHandler = silhouette.SecuredAction(authorization)(errorHandler) { Ok }
-
-    /**
-     * A secured action with a custom error handler.
-     *
-     * @return The result to send to the client.
-     */
-    def actionWithErrorHandler = silhouette.SecuredAction(errorHandler) { Ok("full.access") }
-
-    /**
-     * A secured action with authorization.
-     *
-     * @return The result to send to the client.
-     */
-    def actionWithAuthorization = silhouette.SecuredAction(authorization) { Ok("full.access") }
-
-    /**
-     * A secured renew action.
-     *
-     * @return The result to send to the client.
-     */
-    def renewAction = silhouette.SecuredAction.async { implicit request =>
-      implicit val dyn = request.dynamicEnvironment
-      silhouette.env.authenticatorService.renew(request.authenticator, Ok("renewed"))
-    }
-
-    /**
-     * A secured discard action.
-     *
-     * @return The result to send to the client.
-     */
-    def discardAction = silhouette.SecuredAction.async { implicit request =>
-      silhouette.env.authenticatorService.discard(request.authenticator, Ok("discarded"))
-    }
-
-    /**
-     * A secured request handler.
-     */
-    def defaultHandler = Action.async { implicit request =>
-      silhouette.SecuredRequestHandler { securedRequest =>
-        Future.successful(HandlerResult(Ok, Some(securedRequest.identity)))
-      }.map {
-        case HandlerResult(r, Some(user)) => Ok(Json.toJson(user.loginInfo))
-        case HandlerResult(r, None)       => Unauthorized
+      * A secured discard action.
+      *
+      * @return The result to send to the client.
+      */
+    def discardAction =
+      silhouette.SecuredAction.async { implicit request =>
+        silhouette.env.authenticatorService.discard(request.authenticator, Ok("discarded"))
       }
-    }
 
     /**
-     * Method to test the `exceptionHandler` method of the [[SecuredErrorHandler]].
-     *
-     * @param f The future to recover from.
-     * @param request The request header.
-     * @return The result to send to the client.
-     */
-    def recover(f: Future[Result])(implicit request: RequestHeader): Future[Result] = {
+      * A secured request handler.
+      */
+    def defaultHandler =
+      Action.async { implicit request =>
+        silhouette
+          .SecuredRequestHandler { securedRequest =>
+            Future.successful(HandlerResult(Ok, Some(securedRequest.identity)))
+          }
+          .map {
+            case HandlerResult(r, Some(user)) => Ok(Json.toJson(user.loginInfo))
+            case HandlerResult(r, None)       => Unauthorized
+          }
+      }
+
+    /**
+      * Method to test the `exceptionHandler` method of the [[SecuredErrorHandler]].
+      *
+      * @param f The future to recover from.
+      * @param request The request header.
+      * @return The result to send to the client.
+      */
+    def recover(f: Future[Result])(implicit request: RequestHeader): Future[Result] =
       f.recoverWith(silhouette.SecuredAction.requestHandler.errorHandler.exceptionHandler)
-    }
   }
 }

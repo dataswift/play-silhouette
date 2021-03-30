@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.persistence.repositories
 
 import com.google.inject.{ _ }
@@ -37,14 +37,17 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
- * Test case for the [[DelegableAuthInfoRepository]] trait.
- */
+  * Test case for the [[DelegableAuthInfoRepository]] trait.
+  */
 class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
-  extends Specification with Mockito with NoLanguageFeatures with WaitPatience {
+    extends Specification
+    with Mockito
+    with NoLanguageFeatures
+    with WaitPatience {
 
   "The `find` method" should {
     "delegate the PasswordInfo to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(passwordInfoDAO.add(loginInfo, passwordInfo), 10 seconds)
@@ -54,7 +57,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth1Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(oauth1InfoDAO.add(loginInfo, oauth1Info), 10 seconds)
@@ -64,7 +67,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth2Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(oauth2InfoDAO.add(loginInfo, oauth2Info), 10 seconds)
@@ -74,18 +77,18 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "throw a ConfigurationException if an unsupported type was given" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(service.find[UnsupportedInfo](loginInfo), 5 seconds) must throwA[ConfigurationException].like {
-        case e => e.getMessage must startWith(FindError.format(classOf[UnsupportedInfo]))
-      }
+            case e => e.getMessage must startWith(FindError.format(classOf[UnsupportedInfo]))
+          }
     }
   }
 
   "The `add` method" should {
     "delegate the PasswordInfo to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.add(loginInfo, passwordInfo) must beEqualTo(passwordInfo).awaitWithPatience
@@ -93,7 +96,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth1Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.add(loginInfo, oauth1Info) must beEqualTo(oauth1Info).awaitWithPatience
@@ -101,7 +104,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth2Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.add(loginInfo, oauth2Info) must beEqualTo(oauth2Info).awaitWithPatience
@@ -109,18 +112,18 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "throw a ConfigurationException if an unsupported type was given" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(service.add(loginInfo, new UnsupportedInfo), 5 seconds) must throwA[ConfigurationException].like {
-        case e => e.getMessage must startWith(AddError.format(classOf[UnsupportedInfo]))
-      }
+            case e => e.getMessage must startWith(AddError.format(classOf[UnsupportedInfo]))
+          }
     }
   }
 
   "The `update` method" should {
     "delegate the PasswordInfo to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.update(loginInfo, passwordInfo) must beEqualTo(passwordInfo).awaitWithPatience
@@ -128,7 +131,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth1Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.update(loginInfo, oauth1Info) must beEqualTo(oauth1Info).awaitWithPatience
@@ -136,7 +139,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth2Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.update(loginInfo, oauth2Info) must beEqualTo(oauth2Info).awaitWithPatience
@@ -144,18 +147,18 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "throw a ConfigurationException if an unsupported type was given" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(service.update(loginInfo, new UnsupportedInfo), 5 seconds) must throwA[ConfigurationException].like {
-        case e => e.getMessage must startWith(UpdateError.format(classOf[UnsupportedInfo]))
-      }
+            case e => e.getMessage must startWith(UpdateError.format(classOf[UnsupportedInfo]))
+          }
     }
   }
 
   "The `save` method" should {
     "delegate the PasswordInfo to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.save(loginInfo, passwordInfo) must beEqualTo(passwordInfo).awaitWithPatience
@@ -163,7 +166,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth1Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.save(loginInfo, oauth1Info) must beEqualTo(oauth1Info).awaitWithPatience
@@ -171,7 +174,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth2Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       service.save(loginInfo, oauth2Info) must beEqualTo(oauth2Info).awaitWithPatience
@@ -179,18 +182,18 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "throw a ConfigurationException if an unsupported type was given" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(service.save(loginInfo, new UnsupportedInfo), 5 seconds) must throwA[ConfigurationException].like {
-        case e => e.getMessage must startWith(SaveError.format(classOf[UnsupportedInfo]))
-      }
+            case e => e.getMessage must startWith(SaveError.format(classOf[UnsupportedInfo]))
+          }
     }
   }
 
   "The `remove` method" should {
     "delegate the PasswordInfo to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(passwordInfoDAO.add(loginInfo, passwordInfo), 10 seconds)
@@ -200,7 +203,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth1Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(oauth1InfoDAO.add(loginInfo, oauth1Info), 10 seconds)
@@ -210,7 +213,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "delegate the OAuth2Info to the correct DAO" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(oauth2InfoDAO.add(loginInfo, oauth2Info), 10 seconds)
@@ -220,98 +223,97 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     }
 
     "throw a ConfigurationException if an unsupported type was given" in new Context {
-      val loginInfo = LoginInfo("credentials", "1")
+      val loginInfo                        = LoginInfo("credentials", "1")
       implicit val dummyDynamicEnvironment = DummyDynamicEnvironment()
 
       Await.result(service.remove[UnsupportedInfo](loginInfo), 5 seconds) must throwA[ConfigurationException].like {
-        case e => e.getMessage must startWith(RemoveError.format(classOf[UnsupportedInfo]))
-      }
+            case e => e.getMessage must startWith(RemoveError.format(classOf[UnsupportedInfo]))
+          }
     }
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
 
     /**
-     * The Guice injector.
-     */
+      * The Guice injector.
+      */
     val injector = Guice.createInjector(new BaseModule)
 
     /**
-     * The auth info.
-     */
+      * The auth info.
+      */
     val passwordInfo = PasswordInfo("test.hasher", "test.password")
-    val oauth1Info = OAuth1Info("test.token", "test.secret")
-    val oauth2Info = OAuth2Info("test.token")
+    val oauth1Info   = OAuth1Info("test.token", "test.secret")
+    val oauth2Info   = OAuth2Info("test.token")
 
     /**
-     * The DAOs.
-     */
+      * The DAOs.
+      */
     lazy val passwordInfoDAO = spy(new PasswordInfoDAO)
-    lazy val oauth1InfoDAO = spy(new OAuth1InfoDAO)
-    lazy val oauth2InfoDAO = spy(new OAuth2InfoDAO)
+    lazy val oauth1InfoDAO   = spy(new OAuth1InfoDAO)
+    lazy val oauth2InfoDAO   = spy(new OAuth2InfoDAO)
 
     /**
-     * The cache instance to store the different auth information instances.
-     */
+      * The cache instance to store the different auth information instances.
+      */
     val service = injector.instance[AuthInfoRepository[DummyDynamicEnvironment]]
 
     /**
-     * An unsupported auth info.
-     */
+      * An unsupported auth info.
+      */
     class UnsupportedInfo extends AuthInfo
 
     /**
-     * The Guice module.
-     *
-     * This is to test if the [[com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO]] can be used for
-     * dependency injection because it depends on an implicit [[scala.reflect.ClassTag]] parameter which the
-     * compiler injects at compile time.
-     */
+      * The Guice module.
+      *
+      * This is to test if the [[com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO]] can be used for
+      * dependency injection because it depends on an implicit [[scala.reflect.ClassTag]] parameter which the
+      * compiler injects at compile time.
+      */
     class BaseModule extends AbstractModule with ScalaModule {
 
       /**
-       * Configures the module.
-       */
-      def configure() {
+        * Configures the module.
+        */
+      override def configure(): Unit = {
         bind[DelegableAuthInfoDAO[PasswordInfo, DummyDynamicEnvironment]].toInstance(passwordInfoDAO)
         bind[DelegableAuthInfoDAO[OAuth1Info, DummyDynamicEnvironment]].toInstance(oauth1InfoDAO)
         bind[DelegableAuthInfoDAO[OAuth2Info, DummyDynamicEnvironment]].toInstance(oauth2InfoDAO)
       }
 
       /**
-       * Provides the auth info repository.
-       *
-       * @param passwordInfoDAO The implementation of the delegable password auth info DAO.
-       * @param oauth1InfoDAO The implementation of the delegable OAuth1 auth info DAO.
-       * @param oauth2InfoDAO The implementation of the delegable OAuth2 auth info DAO.
-       * @return The auth info repository instance.
-       */
+        * Provides the auth info repository.
+        *
+        * @param passwordInfoDAO The implementation of the delegable password auth info DAO.
+        * @param oauth1InfoDAO The implementation of the delegable OAuth1 auth info DAO.
+        * @param oauth2InfoDAO The implementation of the delegable OAuth2 auth info DAO.
+        * @return The auth info repository instance.
+        */
       @Provides
       def provideAuthInfoService(
-        passwordInfoDAO: DelegableAuthInfoDAO[PasswordInfo, DummyDynamicEnvironment],
-        oauth1InfoDAO: DelegableAuthInfoDAO[OAuth1Info, DummyDynamicEnvironment],
-        oauth2InfoDAO: DelegableAuthInfoDAO[OAuth2Info, DummyDynamicEnvironment]): AuthInfoRepository[DummyDynamicEnvironment] = {
-
+          passwordInfoDAO: DelegableAuthInfoDAO[PasswordInfo, DummyDynamicEnvironment],
+          oauth1InfoDAO: DelegableAuthInfoDAO[OAuth1Info, DummyDynamicEnvironment],
+          oauth2InfoDAO: DelegableAuthInfoDAO[OAuth2Info, DummyDynamicEnvironment])
+          : AuthInfoRepository[DummyDynamicEnvironment] =
         new DelegableAuthInfoRepository[DummyDynamicEnvironment](passwordInfoDAO, oauth1InfoDAO, oauth2InfoDAO)
-      }
     }
 
     /**
-     * The DAO to store the password information.
-     */
+      * The DAO to store the password information.
+      */
     class PasswordInfoDAO extends InMemoryAuthInfoDAO[PasswordInfo, DummyDynamicEnvironment]
 
     /**
-     * The DAO to store the OAuth1 information.
-     */
+      * The DAO to store the OAuth1 information.
+      */
     class OAuth1InfoDAO extends InMemoryAuthInfoDAO[OAuth1Info, DummyDynamicEnvironment]
 
     /**
-     * The DAO to store the OAuth2 information.
-     */
+      * The DAO to store the OAuth2 information.
+      */
     class OAuth2InfoDAO extends InMemoryAuthInfoDAO[OAuth2Info, DummyDynamicEnvironment]
   }
 }

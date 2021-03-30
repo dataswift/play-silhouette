@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.providers
 
 import com.mohiva.play.silhouette.api.crypto.Signer
@@ -32,8 +32,8 @@ import scala.concurrent.Future
 import scala.util.{ Failure, Success }
 
 /**
- *  Test case for the [[DefaultSocialStateHandler]] class.
- */
+  *  Test case for the [[DefaultSocialStateHandler]] class.
+  */
 class DefaultSocialStateHandlerSpec extends PlaySpecification with Mockito with JsonMatchers {
 
   "The `withHandler` method" should {
@@ -81,7 +81,7 @@ class DefaultSocialStateHandlerSpec extends PlaySpecification with Mockito with 
   "The `unserialize` method" should {
     "omit state validation if no handler is registered" in new Context {
       override val stateHandler = new DefaultSocialStateHandler(Set(), signer)
-      implicit val request = new ExtractableRequest(FakeRequest())
+      implicit val request      = new ExtractableRequest(FakeRequest())
 
       await(stateHandler.unserialize(""))
 
@@ -92,37 +92,37 @@ class DefaultSocialStateHandlerSpec extends PlaySpecification with Mockito with 
       implicit val request = new ExtractableRequest(FakeRequest())
 
       await(stateHandler.unserialize("")) must throwA[RuntimeException].like {
-        case e =>
-          e.getMessage must startWith("Wrong state format")
-      }
+            case e =>
+              e.getMessage must startWith("Wrong state format")
+          }
     }
 
     "throw an ProviderException if the serialized item structure cannot be extracted" in new Context {
       implicit val request = new ExtractableRequest(FakeRequest())
-      val serialized = s"some-wired-content"
+      val serialized       = s"some-wired-content"
 
       await(stateHandler.unserialize(serialized)) must throwA[ProviderException].like {
-        case e =>
-          e.getMessage must startWith(ItemExtractionError.format(serialized))
-      }
+            case e =>
+              e.getMessage must startWith(ItemExtractionError.format(serialized))
+          }
     }
 
     "throw an ProviderException if none of the item handlers can handle the given state" in new Context {
       implicit val request = new ExtractableRequest(FakeRequest())
-      val serialized = s"${Default.structure.asString}"
+      val serialized       = s"${Default.structure.asString}"
 
       Default.itemHandler.canHandle(any[ItemStructure])(any) returns false
       Publishable.itemHandler.canHandle(any[ItemStructure])(any) returns false
 
       await(stateHandler.unserialize(serialized)) must throwA[ProviderException].like {
-        case e =>
-          e.getMessage must startWith(MissingItemHandlerError.format(Default.structure))
-      }
+            case e =>
+              e.getMessage must startWith(MissingItemHandlerError.format(Default.structure))
+          }
     }
 
     "return the unserialized social state" in new Context {
       implicit val request = new ExtractableRequest(FakeRequest())
-      val serialized = s"${Default.structure.asString}.${Publishable.structure.asString}"
+      val serialized       = s"${Default.structure.asString}.${Publishable.structure.asString}"
 
       Default.itemHandler.canHandle(Publishable.structure) returns false
       Default.itemHandler.canHandle(Default.structure) returns true
@@ -139,8 +139,8 @@ class DefaultSocialStateHandlerSpec extends PlaySpecification with Mockito with 
   "The `publish` method" should {
     "should publish the state with the publishable handler that is responsible for the item" in new Context {
       implicit val request = new ExtractableRequest(FakeRequest())
-      val result = Results.Ok
-      val publishedResult = Results.Ok.withHeaders("X-PUBLISHED" -> "true")
+      val result           = Results.Ok
+      val publishedResult  = Results.Ok.withHeaders("X-PUBLISHED" -> "true")
 
       Publishable.itemHandler.publish(Publishable.item, result) returns publishedResult
       Publishable.itemHandler.canHandle(Default.item) returns None
@@ -151,7 +151,7 @@ class DefaultSocialStateHandlerSpec extends PlaySpecification with Mockito with 
 
     "should not publish the state if no publishable handler is responsible" in new Context {
       implicit val request = FakeRequest()
-      val result = Results.Ok
+      val result           = Results.Ok
 
       Publishable.itemHandler.canHandle(Default.item) returns None
       Publishable.itemHandler.canHandle(Publishable.item) returns None
@@ -161,45 +161,45 @@ class DefaultSocialStateHandlerSpec extends PlaySpecification with Mockito with 
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
 
     /**
-     * A default handler implementation.
-     */
+      * A default handler implementation.
+      */
     case class DefaultItem() extends SocialStateItem
     trait DefaultItemHandler extends SocialStateItemHandler {
       type Item = DefaultItem
     }
     object Default {
       val itemHandler = mock[DefaultItemHandler].smart
-      val item = DefaultItem()
-      val structure = ItemStructure("default", Json.obj())
+      val item        = DefaultItem()
+      val structure   = ItemStructure("default", Json.obj())
     }
 
     /**
-     * A publishable handler implementation.
-     */
+      * A publishable handler implementation.
+      */
     case class PublishableItem() extends SocialStateItem
     trait PublishableItemHandler extends SocialStateItemHandler with PublishableSocialStateItemHandler {
       type Item = PublishableItem
     }
     object Publishable {
       val itemHandler = mock[PublishableItemHandler].smart
-      val item = PublishableItem()
-      val structure = ItemStructure("publishable", Json.obj())
+      val item        = PublishableItem()
+      val structure   = ItemStructure("publishable", Json.obj())
     }
 
     /**
-     * The signer implementation.
-     *
-     * The signer returns the same value as passed to the methods. This is enough for testing.
-     */
+      * The signer implementation.
+      *
+      * The signer returns the same value as passed to the methods. This is enough for testing.
+      */
     val signer = {
       val c = mock[Signer].smart
-      c.sign(any) answers { p => p.asInstanceOf[String] }
-      c.extract(any) answers { p =>
+      c.sign(any) answers { (p: Any) => p.asInstanceOf[String] }
+      c.extract(any) answers { (p: Any) =>
         p.asInstanceOf[String] match {
           case "" => Failure(new RuntimeException("Wrong state format"))
           case s  => Success(s)
@@ -209,13 +209,13 @@ class DefaultSocialStateHandlerSpec extends PlaySpecification with Mockito with 
     }
 
     /**
-     * The state.
-     */
+      * The state.
+      */
     val state = SocialState(Set(Publishable.item, Default.item))
 
     /**
-     * The state handler to test.
-     */
+      * The state handler to test.
+      */
     val stateHandler = new DefaultSocialStateHandler(Set(Publishable.itemHandler, Default.itemHandler), signer)
   }
 }
