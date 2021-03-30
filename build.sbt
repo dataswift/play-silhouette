@@ -79,6 +79,7 @@ lazy val silhouetteTestkit = Project(
   .enablePlugins(PlayScala)
 
 val root = Project("play-silhouette-root", file("."))
+  .settings(publishSettings)
   .aggregate(
     silhouette,
     silhouetteCas,
