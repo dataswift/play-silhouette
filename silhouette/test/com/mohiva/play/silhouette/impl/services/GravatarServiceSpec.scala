@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.services
 
 import com.mohiva.play.silhouette.api.util.{ MockHTTPLayer, MockWSRequest }
@@ -25,8 +25,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
- * Test case for the [[com.mohiva.play.silhouette.impl.services.GravatarService]] class.
- */
+  * Test case for the [[com.mohiva.play.silhouette.impl.services.GravatarService]] class.
+  */
 class GravatarServiceSpec extends PlaySpecification with Mockito {
 
   "The `retrieveURL` method" should {
@@ -35,7 +35,7 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
     }
 
     "return None if HTTP status code isn't 200" in new Context {
-      val wsRequest = mock[MockWSRequest]
+      val wsRequest  = mock[MockWSRequest]
       val wsResponse = mock[MockWSRequest#Response]
 
       wsResponse.status returns 404
@@ -46,7 +46,7 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
     }
 
     "return None if HTTP status code isn't 200" in new Context {
-      val wsRequest = mock[MockWSRequest]
+      val wsRequest  = mock[MockWSRequest]
       val wsResponse = mock[MockWSRequest#Response]
 
       wsResponse.status returns 404
@@ -57,7 +57,7 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
     }
 
     "return None if exception will be thrown during API request" in new Context {
-      val wsRequest = mock[MockWSRequest]
+      val wsRequest  = mock[MockWSRequest]
       val wsResponse = mock[MockWSRequest#Response]
 
       wsResponse.status throws new RuntimeException("Timeout error")
@@ -68,7 +68,7 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
     }
 
     "return secure Avatar url" in new Context {
-      val wsRequest = mock[MockWSRequest]
+      val wsRequest  = mock[MockWSRequest]
       val wsResponse = mock[MockWSRequest#Response]
 
       wsResponse.status returns 200
@@ -79,7 +79,7 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
     }
 
     "return insecure Avatar url" in new Context {
-      val wsRequest = mock[MockWSRequest]
+      val wsRequest  = mock[MockWSRequest]
       val wsResponse = mock[MockWSRequest#Response]
 
       settings.secure returns false
@@ -91,7 +91,7 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
     }
 
     "return an url with additional parameters" in new Context {
-      val wsRequest = mock[MockWSRequest]
+      val wsRequest  = mock[MockWSRequest]
       val wsResponse = mock[MockWSRequest#Response]
 
       settings.params returns Map("d" -> "http://example.com/images/avatar.jpg", "s" -> "400")
@@ -100,12 +100,12 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
       httpLayer.url(any) returns wsRequest
 
       await(service.retrieveURL(email)) should beSome(
-        SecureURL.format(hash, "?d=http%3A%2F%2Fexample.com%2Fimages%2Favatar.jpg&s=400")
-      )
+            SecureURL.format(hash, "?d=http%3A%2F%2Fexample.com%2Fimages%2Favatar.jpg&s=400")
+          )
     }
 
     "not trim leading zeros" in new Context {
-      val wsRequest = mock[MockWSRequest]
+      val wsRequest  = mock[MockWSRequest]
       val wsResponse = mock[MockWSRequest#Response]
 
       wsResponse.status returns 200
@@ -113,19 +113,19 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
       httpLayer.url(any) returns wsRequest
 
       await(service.retrieveURL("123test@test.com")) should beSome(
-        SecureURL.format("0d77aed6b4c5857473c9a04c2017f8b8", "?d=404")
-      )
+            SecureURL.format("0d77aed6b4c5857473c9a04c2017f8b8", "?d=404")
+          )
     }
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
 
     /**
-     * The HTTP layer implementation.
-     */
+      * The HTTP layer implementation.
+      */
     val httpLayer = {
       val m = mock[MockHTTPLayer]
       m.executionContext returns global
@@ -133,25 +133,25 @@ class GravatarServiceSpec extends PlaySpecification with Mockito {
     }
 
     /**
-     * The Gravatar service settings.
-     */
+      * The Gravatar service settings.
+      */
     val settings = spy(GravatarServiceSettings())
 
     /**
-     * The Gravatar service implementation.
-     */
+      * The Gravatar service implementation.
+      */
     val service = new GravatarService(httpLayer, settings)
 
     /**
-     * The email for which the Avatar should be retrieved.
-     */
+      * The email for which the Avatar should be retrieved.
+      */
     val email = "apollonia.vanova@watchmen.com"
 
     /**
-     * The generated hash for the email address.
-     *
-     * @see http://en.gravatar.com/site/check/
-     */
+      * The generated hash for the email address.
+      *
+      * @see http://en.gravatar.com/site/check/
+      */
     val hash = "c6b0eb337880e2960f5bdbf0aa24c8ac"
   }
 }

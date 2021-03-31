@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.providers
 
 import com.mohiva.play.silhouette.api.exceptions.ConfigurationException
@@ -29,21 +29,21 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
- * Test case for the [[CasProvider]] class.
- */
+  * Test case for the [[CasProvider]] class.
+  */
 class CasProviderSpec extends SocialProviderSpec[CasInfo] with Mockito with Logger {
 
   "The settings" should {
     "fail with a ConfigurationException if casURL is invalid" in new Context {
       CasSettings(casURL = "", redirectURL = "https://cas-redirect/") must throwA[ConfigurationException].like {
-        case e => e.getMessage must be equalTo CasSettings.CasUrlInvalid.format(CasProvider.ID, "")
-      }
+            case e => e.getMessage must be equalTo CasSettings.CasUrlInvalid.format(CasProvider.ID, "")
+          }
     }
 
     "fail with a ConfigurationException if redirectURL is invalid" in new Context {
       CasSettings(casURL = "https://cas-url/", redirectURL = "") must throwA[ConfigurationException].like {
-        case e => e.getMessage must be equalTo CasSettings.RedirectUrlInvalid.format(CasProvider.ID, "")
-      }
+            case e => e.getMessage must be equalTo CasSettings.RedirectUrlInvalid.format(CasProvider.ID, "")
+          }
     }
 
     "fail with a ConfigurationException if encoding is empty" in new Context {
@@ -52,8 +52,8 @@ class CasProviderSpec extends SocialProviderSpec[CasInfo] with Mockito with Logg
         redirectURL = "https://cas-redirect/",
         encoding = ""
       ) must throwA[ConfigurationException].like {
-        case e => e.getMessage must be equalTo CasSettings.EncodingInvalid.format(CasProvider.ID)
-      }
+            case e => e.getMessage must be equalTo CasSettings.EncodingInvalid.format(CasProvider.ID)
+          }
     }
 
     "fail with a ConfigurationException if samlTimeTolerance is negative" in new Context {
@@ -62,8 +62,8 @@ class CasProviderSpec extends SocialProviderSpec[CasInfo] with Mockito with Logg
         redirectURL = "https://cas-redirect/",
         samlTimeTolerance = -1.millis
       ) must throwA[ConfigurationException].like {
-        case e => e.getMessage must be equalTo CasSettings.TimeToleranceInvalid.format(CasProvider.ID, -1.millis)
-      }
+            case e => e.getMessage must be equalTo CasSettings.TimeToleranceInvalid.format(CasProvider.ID, -1.millis)
+          }
     }
   }
 
@@ -107,26 +107,24 @@ class CasProviderSpec extends SocialProviderSpec[CasInfo] with Mockito with Logg
       } yield p
 
       await(futureProfile) must beLike[CommonSocialProfile] {
-        case profile =>
-          profile must be equalTo CommonSocialProfile(
-            loginInfo = new LoginInfo(CasProvider.ID, userName),
-            firstName = Some(firstName),
-            lastName = Some(lastName),
-            fullName = None,
-            email = Some(email),
-            avatarURL = Some(pictureURL)
-          )
-      }
+            case profile =>
+              profile must be equalTo CommonSocialProfile(
+                    loginInfo = new LoginInfo(CasProvider.ID, userName),
+                    firstName = Some(firstName),
+                    lastName = Some(lastName),
+                    fullName = None,
+                    email = Some(email),
+                    avatarURL = Some(pictureURL)
+                  )
+          }
     }
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
-    lazy val settings = CasSettings(
-      casURL = "https://cas-url/",
-      redirectURL = "https://cas-redirect/")
+    lazy val settings = CasSettings(casURL = "https://cas-url/", redirectURL = "https://cas-redirect/")
 
     lazy val httpLayer = {
       val m = mock[HTTPLayer]
@@ -146,11 +144,11 @@ class CasProviderSpec extends SocialProviderSpec[CasInfo] with Mockito with Logg
 
     lazy val principal = mock[AttributePrincipal].smart
 
-    lazy val name = "abc123"
-    lazy val email = "email"
-    lazy val firstName = "Nick"
-    lazy val lastName = "Shaw"
-    lazy val userName = "314159"
+    lazy val name       = "abc123"
+    lazy val email      = "email"
+    lazy val firstName  = "Nick"
+    lazy val lastName   = "Shaw"
+    lazy val userName   = "314159"
     lazy val pictureURL = "http://www.gravatar"
 
     lazy val attr = new java.util.HashMap[String, Object]()

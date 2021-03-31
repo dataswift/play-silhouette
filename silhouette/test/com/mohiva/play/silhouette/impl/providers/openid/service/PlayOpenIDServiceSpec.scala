@@ -20,12 +20,13 @@ class PlayOpenIDServiceSpec extends PlaySpecification with Mockito {
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
+
     /**
-     * The OpenID settings.
-     */
+      * The OpenID settings.
+      */
     lazy val openIDSettings = OpenIDSettings(
       providerURL = "https://me.yahoo.com/",
       callbackURL = "http://localhost:9000/authenticate/yahoo",

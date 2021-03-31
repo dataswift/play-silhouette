@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.api.util
 
 import org.specs2.specification.Scope
@@ -22,22 +22,24 @@ import play.api.mvc.{ AnyContentAsEmpty, Request }
 import play.api.test._
 
 /**
- * Test case for the [[com.mohiva.play.silhouette.api.util.RequestExtractor]] object.
- */
+  * Test case for the [[com.mohiva.play.silhouette.api.util.RequestExtractor]] object.
+  */
 class RequestExtractorSpec extends PlaySpecification {
 
   /**
-   * Some custom extractors to test if an extractor could be overridden.
-   */
+    * Some custom extractors to test if an extractor could be overridden.
+    */
   object extractors {
 
     /**
-     * Tries to extract the value from Json body.
-     */
+      * Tries to extract the value from Json body.
+      */
     implicit val jsonExtractor = new RequestExtractor[JsValue] {
-      def extractString(name: String, parts: Option[Parts] = None)(implicit request: Request[JsValue]) = {
+      def extractString(
+          name: String,
+          parts: Option[Parts] = None
+        )(implicit request: Request[JsValue]) =
         request.body.\("test").\(name).asOpt[String]
-      }
     }
   }
 
@@ -79,7 +81,8 @@ class RequestExtractorSpec extends PlaySpecification {
     }
 
     "return None if no value could be found in default parts" in new Context {
-      implicit val request = FakeRequest.apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
+      implicit val request = FakeRequest
+        .apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
         .withHeaders("none" -> "value")
 
       extract("code") must beNone
@@ -104,7 +107,8 @@ class RequestExtractorSpec extends PlaySpecification {
     }
 
     "return None if no value could be found in default parts or URL encoded body" in new Context {
-      implicit val request = FakeRequest.apply("GET", "?none=value")
+      implicit val request = FakeRequest
+        .apply("GET", "?none=value")
         .withHeaders("none" -> "value")
         .withFormUrlEncodedBody(("none", "value"))
 
@@ -130,7 +134,8 @@ class RequestExtractorSpec extends PlaySpecification {
     }
 
     "return None if no value could be found in default parts or Json body" in new Context {
-      implicit val request = FakeRequest.apply("GET", "?none=value")
+      implicit val request = FakeRequest
+        .apply("GET", "?none=value")
         .withHeaders("none" -> "value")
         .withJsonBody(Json.obj("none" -> "value"))
 
@@ -156,7 +161,8 @@ class RequestExtractorSpec extends PlaySpecification {
     }
 
     "return None if no value could be found in default parts or XML body" in new Context {
-      implicit val request = FakeRequest.apply("GET", "?none=value")
+      implicit val request = FakeRequest
+        .apply("GET", "?none=value")
         .withHeaders("none" -> "value")
         .withXmlBody(<none>value</none>)
 
@@ -184,7 +190,8 @@ class RequestExtractorSpec extends PlaySpecification {
     }
 
     "return None if no value could be found in default parts or body" in new Context {
-      implicit val request = FakeRequest.apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
+      implicit val request = FakeRequest
+        .apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
         .withHeaders("none" -> "value")
         .withBody(Map("none" -> Seq("value")))
 
@@ -212,7 +219,8 @@ class RequestExtractorSpec extends PlaySpecification {
     }
 
     "return None if no value could be found in default parts or body" in new Context {
-      implicit val request = FakeRequest.apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
+      implicit val request = FakeRequest
+        .apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
         .withHeaders("none" -> "value")
         .withBody(Json.obj("none" -> "value"))
 
@@ -240,7 +248,8 @@ class RequestExtractorSpec extends PlaySpecification {
     }
 
     "return None if no value could be found in default parts or body" in new Context {
-      implicit val request = FakeRequest.apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
+      implicit val request = FakeRequest
+        .apply("GET", "?none=value", TypedMap(TypedKey("none").bindValue("value")))
         .withHeaders("none" -> "value")
         .withBody(<none>value</none>)
 
@@ -291,35 +300,37 @@ class RequestExtractorSpec extends PlaySpecification {
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   class Context extends Scope {
 
     /**
-     * Extracts a value from request.
-     *
-     * @param name The name of the value to extract.
-     * @param parts The request parts from which a value can be extracted.
-     * @param request The request from which the value should be extracted.
-     * @tparam B The type of the request body.
-     * @return The extracted value or None if the value couldn't be extracted.
-     */
-    def extract[B](name: String, parts: Option[Seq[RequestPart.Value]] = None)(
-      implicit
-      request: ExtractableRequest[B]): Option[String] = {
-
+      * Extracts a value from request.
+      *
+      * @param name The name of the value to extract.
+      * @param parts The request parts from which a value can be extracted.
+      * @param request The request from which the value should be extracted.
+      * @tparam B The type of the request body.
+      * @return The extracted value or None if the value couldn't be extracted.
+      */
+    def extract[B](
+        name: String,
+        parts: Option[Seq[RequestPart.Value]] = None
+      )(implicit
+        request: ExtractableRequest[B]): Option[String] =
       request.extractString(name, parts)
-    }
 
     /**
-     * Provides some additional helper utilities to build FakeRequest values.
-     *
-     * @param r The request to adds the helpers to.
-     */
+      * Provides some additional helper utilities to build FakeRequest values.
+      *
+      * @param r The request to adds the helpers to.
+      */
     implicit class RichFakeRequest(r: FakeRequest.type) {
-      def apply(method: String, path: String, attrs: TypedMap): FakeRequest[AnyContentAsEmpty.type] = {
+      def apply(
+          method: String,
+          path: String,
+          attrs: TypedMap): FakeRequest[AnyContentAsEmpty.type] =
         FakeRequest(method, path, FakeHeaders(), AnyContentAsEmpty)
-      }
     }
   }
 }

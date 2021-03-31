@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.impl.providers.oauth1.services
 
 import com.mohiva.play.silhouette.impl.providers.{ OAuth1Info, OAuth1Settings }
@@ -26,8 +26,8 @@ import play.shaded.oauth.oauth.signpost.exception.{ OAuthException, OAuthMessage
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
- * Test case for the [[PlayOAuth1Service]] class.
- */
+  * Test case for the [[PlayOAuth1Service]] class.
+  */
 class PlayOAuth1ServiceSpec extends PlaySpecification with Mockito {
 
   "The `withSettings` method" should {
@@ -105,39 +105,40 @@ class PlayOAuth1ServiceSpec extends PlaySpecification with Mockito {
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
 
     /**
-     * The OAuth1 settings.
-     */
+      * The OAuth1 settings.
+      */
     lazy val settings = OAuth1Settings(
       requestTokenURL = "https://api.linkedin.com/uas/oauth/requestToken",
       accessTokenURL = "https://api.linkedin.com/uas/oauth/accessToken",
       authorizationURL = "https://api.linkedin.com/uas/oauth/authenticate",
       callbackURL = "https://www.mohiva.com",
       consumerKey = "my.consumer.key",
-      consumerSecret = "my.consumer.secret")
+      consumerSecret = "my.consumer.secret"
+    )
 
     /**
-     * The Silhouette OAuth1 info.
-     */
+      * The Silhouette OAuth1 info.
+      */
     lazy val info = OAuth1Info("my.token", "my.secret")
 
     /**
-     * The Play OAuth request token.
-     */
+      * The Play OAuth request token.
+      */
     lazy val token = RequestToken("my.token", "my.secret")
 
     /**
-     * A mock of the Play Framework OAuth implementation.
-     */
+      * A mock of the Play Framework OAuth implementation.
+      */
     lazy val oauth: OAuth = mock[OAuth]
 
     /**
-     * The service to test.
-     */
+      * The service to test.
+      */
     lazy val service = new PlayOAuth1Service(oauth, settings)
   }
 }

@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.persistence.repositories
 
 import com.mohiva.play.silhouette.api.StorableAuthenticator
@@ -27,8 +27,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
 /**
- * Test case for the [[CacheAuthenticatorRepository]] class.
- */
+  * Test case for the [[CacheAuthenticatorRepository]] class.
+  */
 class CacheAuthenticatorRepositorySpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
   "The `find` method" should {
@@ -77,23 +77,23 @@ class CacheAuthenticatorRepositorySpec(implicit ev: ExecutionEnv) extends Specif
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
 
     /**
-     * A storable authenticator.
-     */
+      * A storable authenticator.
+      */
     lazy val authenticator = mock[StorableAuthenticator]
 
     /**
-     * The cache layer implementation.
-     */
+      * The cache layer implementation.
+      */
     lazy val cacheLayer = mock[CacheLayer]
 
     /**
-     * The repository to test.
-     */
+      * The repository to test.
+      */
     lazy val repository = new CacheAuthenticatorRepository[StorableAuthenticator](cacheLayer)
   }
 }

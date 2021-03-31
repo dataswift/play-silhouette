@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.api
 
 import org.specs2.matcher.Scope
@@ -24,8 +24,8 @@ import play.api.test.{ FakeRequest, PlaySpecification, WithApplication }
 import scala.concurrent.Future
 
 /**
- * Test case for the [[com.mohiva.play.silhouette.api.ErrorHandler]] implementations.
- */
+  * Test case for the [[com.mohiva.play.silhouette.api.ErrorHandler]] implementations.
+  */
 class ErrorHandlerSpec extends PlaySpecification {
 
   "The `DefaultNotAuthenticatedErrorHandler.notAuthenticated` method" should {
@@ -36,7 +36,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = HTML,
         expectedResponseFragment = "<html>",
         expectedMessage = "silhouette.not.authenticated",
-        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) })
+        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) }
+      )
     }
 
     "return a JSON response for a JSON request" in new WithApplication with Context {
@@ -46,7 +47,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = JSON,
         expectedResponseFragment = "\"success\":false",
         expectedMessage = "silhouette.not.authenticated",
-        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) })
+        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) }
+      )
     }
 
     "return a XML response for a XML request" in new WithApplication with Context {
@@ -56,7 +58,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = XML,
         expectedResponseFragment = "<success>false</success>",
         expectedMessage = "silhouette.not.authenticated",
-        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) })
+        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) }
+      )
     }
 
     "return a plain text response for a plain text request" in new WithApplication with Context {
@@ -66,7 +69,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = TEXT,
         expectedResponseFragment = messagesApi("silhouette.not.authenticated"),
         expectedMessage = "silhouette.not.authenticated",
-        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) })
+        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) }
+      )
     }
 
     "return a plain text response for other requests" in new WithApplication with Context {
@@ -76,7 +80,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = TEXT,
         expectedResponseFragment = messagesApi("silhouette.not.authenticated"),
         expectedMessage = "silhouette.not.authenticated",
-        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) })
+        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) }
+      )
     }
 
     "return an HTML response for a request without an Accept header" in new WithApplication with Context {
@@ -86,7 +91,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = HTML,
         expectedResponseFragment = messagesApi("silhouette.not.authenticated"),
         expectedMessage = "silhouette.not.authenticated",
-        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) })
+        f = { r: RequestHeader => notAuthenticated.onNotAuthenticated(r) }
+      )
     }
   }
 
@@ -98,7 +104,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = HTML,
         expectedResponseFragment = "<html>",
         expectedMessage = "silhouette.not.authorized",
-        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) })
+        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) }
+      )
     }
 
     "return a JSON response for a JSON request" in new WithApplication with Context {
@@ -108,7 +115,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = JSON,
         expectedResponseFragment = "\"success\":false",
         expectedMessage = "silhouette.not.authorized",
-        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) })
+        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) }
+      )
     }
 
     "return a XML response for a XML request" in new WithApplication with Context {
@@ -118,7 +126,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = XML,
         expectedResponseFragment = "<success>false</success>",
         expectedMessage = "silhouette.not.authorized",
-        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) })
+        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) }
+      )
     }
 
     "return a plain text response for a plain text request" in new WithApplication with Context {
@@ -128,7 +137,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = TEXT,
         expectedResponseFragment = messagesApi("silhouette.not.authorized"),
         expectedMessage = "silhouette.not.authorized",
-        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) })
+        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) }
+      )
     }
 
     "return a plain text response for other requests" in new WithApplication with Context {
@@ -138,7 +148,8 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = TEXT,
         expectedResponseFragment = messagesApi("silhouette.not.authorized"),
         expectedMessage = "silhouette.not.authorized",
-        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) })
+        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) }
+      )
     }
 
     "return an HTML response for a request without an Accept header" in new WithApplication with Context {
@@ -148,50 +159,51 @@ class ErrorHandlerSpec extends PlaySpecification {
         expectedContentType = HTML,
         expectedResponseFragment = messagesApi("silhouette.not.authorized"),
         expectedMessage = "silhouette.not.authorized",
-        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) })
+        f = { r: RequestHeader => notAuthorized.onNotAuthorized(r) }
+      )
     }
   }
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope with I18nSupport {
     self: WithApplication =>
 
     /**
-     * The Play messages provider.
-     */
+      * The Play messages provider.
+      */
     lazy val messagesApi = app.injector.instanceOf[MessagesApi]
 
     /**
-     * The implicit lang.
-     */
-    lazy implicit val lang: Lang = app.injector.instanceOf[Langs].availables.head
+      * The implicit lang.
+      */
+    implicit lazy val lang: Lang = app.injector.instanceOf[Langs].availables.head
 
     /**
-     * The default not-authenticated error handler.
-     */
+      * The default not-authenticated error handler.
+      */
     lazy val notAuthenticated = new DefaultNotAuthenticatedErrorHandler {
       val messagesApi = self.messagesApi
     }
 
     /**
-     * The default not-authorized error handler.
-     */
+      * The default not-authorized error handler.
+      */
     lazy val notAuthorized = new DefaultNotAuthorizedErrorHandler {
       val messagesApi = self.messagesApi
     }
 
     /**
-     * A helper method to test the response.
-     */
+      * A helper method to test the response.
+      */
     def testResponse(
-      acceptedMediaType: Option[String],
-      expectedStatus: Int,
-      expectedContentType: String,
-      expectedResponseFragment: String,
-      expectedMessage: String,
-      f: RequestHeader => Future[Result]) = {
+        acceptedMediaType: Option[String],
+        expectedStatus: Int,
+        expectedContentType: String,
+        expectedResponseFragment: String,
+        expectedMessage: String,
+        f: RequestHeader => Future[Result]) = {
       implicit val request = acceptedMediaType match {
         case Some(mediaType) => FakeRequest().withHeaders(ACCEPT -> mediaType)
         case None            => FakeRequest()

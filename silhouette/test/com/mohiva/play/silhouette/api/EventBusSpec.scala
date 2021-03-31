@@ -1,18 +1,18 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package com.mohiva.play.silhouette.api
 
 import akka.actor.{ Actor, ActorSystem, Props }
@@ -25,8 +25,8 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
- * Test case for the [[com.mohiva.play.silhouette.api.EventBus]] class.
- */
+  * Test case for the [[com.mohiva.play.silhouette.api.EventBus]] class.
+  */
 class EventBusSpec extends PlaySpecification with NoLanguageFeatures {
 
   "The event bus" should {
@@ -131,42 +131,42 @@ class EventBusSpec extends PlaySpecification with NoLanguageFeatures {
   }
 
   /**
-   * An identity implementation.
-   *
-   * @param loginInfo The linked login info.
-   */
+    * An identity implementation.
+    *
+    * @param loginInfo The linked login info.
+    */
   case class TestIdentity(loginInfo: LoginInfo) extends Identity
 
   /**
-   * The context.
-   */
+    * The context.
+    */
   trait Context extends Scope {
     self: WithApplication =>
 
     /**
-     * An identity implementation.
-     */
+      * An identity implementation.
+      */
     lazy val identity = TestIdentity(LoginInfo("test", "apollonia.vanova@watchmen.com"))
 
     /**
-     * A fake request.
-     */
+      * A fake request.
+      */
     lazy val request = FakeRequest()
 
     /**
-     * The Play actor system.
-     */
-    lazy implicit val system = app.injector.instanceOf[ActorSystem]
+      * The Play actor system.
+      */
+    implicit lazy val system = app.injector.instanceOf[ActorSystem]
 
     /**
-     * The test probe.
-     */
+      * The test probe.
+      */
     lazy val theProbe = TestProbe()
 
     /**
-     * Some events.
-     */
-    lazy val loginEvent = new LoginEvent[TestIdentity](identity, request)
+      * Some events.
+      */
+    lazy val loginEvent  = new LoginEvent[TestIdentity](identity, request)
     lazy val logoutEvent = new LogoutEvent[TestIdentity](identity, request)
   }
 }
