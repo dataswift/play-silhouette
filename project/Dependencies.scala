@@ -32,7 +32,7 @@ object Dependencies {
     val specs2MatcherExtra   = "org.specs2"          %% "specs2-matcher-extra"    % "4.8.3"
     val commonsLang3         = "org.apache.commons"   % "commons-lang3"           % "3.12.0"
     val jbcrypt              = "de.svenkubiak"        % "jBCrypt"                 % "0.4.1"
-    val jwtCore              = "com.atlassian.jwt"    % "jwt-core"                % "2.0.5"
+    val jwtCore              = "com.atlassian.jwt"    % "jwt-core"                % "2.1.0"
     val jwtApi               = "com.atlassian.jwt"    % "jwt-api"                 % "3.2.0"
     val scalaGuice           = "net.codingwell"      %% "scala-guice"             % "4.2.11"
     val akkaTestkit          = "com.typesafe.akka"   %% "akka-testkit"            % "2.6.10"
