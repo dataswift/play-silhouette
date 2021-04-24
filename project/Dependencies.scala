@@ -29,7 +29,7 @@ object Dependencies {
       val jsonJoda = "com.typesafe.play" %% "play-json-joda" % "2.9.2"
     }
 
-    val specs2MatcherExtra   = "org.specs2"          %% "specs2-matcher-extra"    % "4.8.3"
+    val specs2MatcherExtra   = "org.specs2"          %% "specs2-matcher-extra"    % "4.11.0"
     val commonsLang3         = "org.apache.commons"   % "commons-lang3"           % "3.12.0"
     val jbcrypt              = "de.svenkubiak"        % "jBCrypt"                 % "0.4.1"
     val jwtCore              = "com.atlassian.jwt"    % "jwt-core"                % "2.0.5"
