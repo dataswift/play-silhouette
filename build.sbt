@@ -13,7 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-import Dependencies.Library
+import Dependencies.LocalThirdParty
+import play.sbt.PlayImport
 
 val publishSettings = Seq(
   publishMavenStyle := true,
@@ -29,17 +30,17 @@ lazy val silhouette = Project(
 ).settings(
   publishSettings,
   libraryDependencies ++= Seq(
-        Library.commonsLang3,
-        Library.Play.cache,
-        Library.Play.ws,
-        Library.Play.openid,
-        Library.Play.jsonJoda,
-        Library.jwtCore,
-        Library.jwtApi,
-        Library.Play.specs2        % Test,
-        Library.specs2MatcherExtra % Test,
-        Library.scalaGuice         % Test,
-        Library.akkaTestkit        % Test
+        PlayImport.cacheApi,
+        PlayImport.ws,
+        PlayImport.component("play-openid"),
+        Lib.AtlassianJwtApi,
+        Lib.AtlassianJwtCore,
+        Lib.CommonsLang3,
+        Lib.PlayJsonJoda,
+        Lib.ScalaGuice                      % Test,
+        LocalThirdParty.specs2MatcherExtra  % Test,
+        LocalThirdParty.akkaTestkit         % Test,
+        PlayImport.component("play-specs2") % Test
       )
 ).enablePlugins(PlayScala)
 
@@ -48,8 +49,8 @@ lazy val silhouetteCas = Project(
   base = file("silhouette-cas")
 ).settings(publishSettings,
            libraryDependencies ++= Seq(
-                 Library.casClient,
-                 Library.casClientSupportSAML
+                 LocalThirdParty.casClient,
+                 LocalThirdParty.casClientSupportSAML
                )
 ).dependsOn(silhouette % "compile->compile;test->test")
 
@@ -62,7 +63,7 @@ lazy val silhouetteCryptoJca = Project(
 lazy val silhouettePasswordBcrypt = Project(
   id = "dataswift-play-silhouette-password-bcrypt",
   base = file("silhouette-password-bcrypt")
-).settings(publishSettings, libraryDependencies += Library.jbcrypt)
+).settings(publishSettings, libraryDependencies += Lib.JBcrypt)
   .dependsOn(silhouette % "compile->compile;test->test")
 
 lazy val silhouettePersistence = Project(
@@ -74,7 +75,7 @@ lazy val silhouettePersistence = Project(
 lazy val silhouetteTestkit = Project(
   id = "dataswift-play-silhouette-testkit",
   base = file("silhouette-testkit")
-).settings(publishSettings, libraryDependencies += Library.Play.test)
+).settings(publishSettings, libraryDependencies += PlayImport.component("play-test"))
   .dependsOn(silhouette % "compile->compile;test->test")
   .enablePlugins(PlayScala)
 
@@ -91,14 +92,13 @@ val root = Project("play-silhouette-root", file("."))
 
 inThisBuild(
   List(
-    scalaVersion := "2.13.5",
     scalafixScalaBinaryVersion := "2.13",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
     organization := "com.mohiva",
     resolvers += "Atlassian Releases" at "https://maven.atlassian.com/public/",
-    parallelExecution in Test := false,
-    fork in Test := true,
+    Test / parallelExecution := false,
+    Test / fork := true,
     // Needed to avoid https://github.com/travis-ci/travis-ci/issues/3775 in forked tests
     // in Travis with `sudo: false`.
     // See https://github.com/sbt/sbt/issues/653
