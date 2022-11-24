@@ -21,7 +21,7 @@ object Dependencies {
     val specs2MatcherExtra   = "org.specs2"          %% "specs2-matcher-extra"    % "4.8.3"
     val casClient            = "org.jasig.cas.client" % "cas-client-core"         % "3.4.1"
     val casClientSupportSAML = "org.jasig.cas.client" % "cas-client-support-saml" % "3.4.1"
-    val akkaTestkit          = "com.typesafe.akka"   %% "akka-testkit"            % "2.6.14"
+    val akkaTestkit          = "com.typesafe.akka"   %% "akka-testkit"            % "2.6.15"
   }
 
 }
